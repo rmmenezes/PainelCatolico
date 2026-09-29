@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  var D = window.DATA, ART = window.ARTICLES, A = window.Ambient, app = document.getElementById('app');
+  var D = window.DATA, ARTS = window.ARTICLES, A = window.Ambient, app = document.getElementById('app');
 
   /* ---------- utilidades ---------- */
   function load(k, def) { try { var v = JSON.parse(localStorage.getItem(k)); return v === null ? def : v; } catch (e) { return def; } }
@@ -28,6 +28,9 @@
     scroll: '<path d="M8 21h11a2 2 0 0 0 2-2v-1H10v1a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2 2 2 0 0 0-2 2v2h3M10 18V5a2 2 0 0 0-2-2h11a2 2 0 0 1 2 2v13"/>',
     moonstar: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/>',
     timer: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/>',
+    play: '<path d="M8 5v14l11-7z"/>',
+    pause: '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>',
+    arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
     tap: '<path d="M9 11V5a2 2 0 0 1 4 0v6M13 9a2 2 0 0 1 4 0v3a6 6 0 0 1-6 6h-1a5 5 0 0 1-4-2l-2-3a2 2 0 0 1 3-2l1 1"/>'
   };
   function ic(n) { return '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">' + (ICONS[n] || '') + '</svg>'; }
@@ -45,11 +48,11 @@
   function titleOf(p) { return (lang === 'la' && p.latin) ? p.latin : p.title; }
   function prayerCard(p, open) {
     var sub = (lang === 'both' && p.latin) ? '<span class="sub">' + esc(p.latin) + '</span>' : '';
-    return '<details class="pray"' + (open ? ' open' : '') + '><summary><span>' + esc(titleOf(p)) + sub + '</span><span class="tag">' + esc(p.cat) + '</span></summary><div class="inner">' + body(p) + '</div></details>';
+    return '<details class="pray"' + (open ? ' open' : '') + '><summary><span class="pray-ic" aria-hidden="true">✝</span><span class="pt">' + esc(titleOf(p)) + sub + '</span><span class="tag">' + esc(p.cat) + '</span></summary><div class="inner">' + body(p) + '</div></details>';
   }
   function setLang(l) {
     lang = l; save('lang', l);
-    $$('[data-lang]').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.lang === l); });
+    syncLang();
     route();
   }
 
@@ -75,48 +78,73 @@
     render();
   }
   function doneCard(msg) {
-    return '<div class="card stage"><h3>Amém.</h3><p>' + msg + '</p><div class="row" style="justify-content:center"><a class="btn" href="#/praticas">Outras práticas</a><a class="btn ghost" href="#/">Início</a></div></div>';
+    return '<div class="stage"><div class="step-n">✝</div><h3>Amém.</h3><p>' + msg + '</p><div class="row" style="justify-content:center"><a class="btn" href="#/praticas">Outras práticas</a><a class="btn ghost" href="#/">Início</a></div></div>';
   }
 
   /* ---------- telas ---------- */
   var NAV = [['', 'Início', 'home'], ['oracoes', 'Orações', 'book'], ['praticas', 'Práticas', 'heart'], ['leituras', 'Leituras', 'scroll'], ['diario', 'Diário', 'pen']];
 
   var PRACTICES = [
-    { id: 'terco', icon: 'beads', title: 'Santo Terço guiado', min: '20 min', desc: 'Reze o terço passo a passo, com os mistérios do dia e as orações em português e latim.' },
-    { id: 'respirar', icon: 'wind', title: 'Respirar com oração', min: '3–5 min', desc: 'Respiração guiada com uma frase de oração a cada ciclo. Ideal para a ansiedade.' },
-    { id: 'aterramento', icon: 'eye', title: 'Aterramento 5-4-3-2-1', min: '3 min', desc: 'Traga a mente ao presente usando os sentidos, com uma breve oração em cada passo.' },
-    { id: 'lectio', icon: 'book', title: 'Lectio Divina', min: '10 min', desc: 'Leia, medite, reze e contemple uma passagem da Escritura, em português e latim.' },
-    { id: 'silencio', icon: 'timer', title: 'Silêncio diante de Deus', min: '3–10 min', desc: 'Um tempo de quietude com sino suave no início e no fim.' },
-    { id: 'jaculatoria', icon: 'tap', title: 'Oração do coração', min: 'livre', desc: 'Repita uma jaculatória com um toque a cada vez. Um contador simples, sem pressa.' },
-    { id: 'exame', icon: 'moonstar', title: 'Exame do dia', min: '8 min', desc: 'Um exame de fim de dia: gratidão, revisão sem julgamento, perdão e confiança.' }
+    { id: 'terco', art: 'rosary', icon: 'beads', title: 'Santo Terço guiado', min: '20 min', desc: 'Reze o terço passo a passo, com os mistérios do dia e as orações em português e latim.' },
+    { id: 'respirar', art: 'dove', icon: 'wind', title: 'Respirar com oração', min: '3–5 min', desc: 'Respiração guiada com uma frase de oração a cada ciclo. Ideal para a ansiedade.' },
+    { id: 'aterramento', art: 'lily', icon: 'eye', title: 'Aterramento 5-4-3-2-1', min: '3 min', desc: 'Traga a mente ao presente usando os sentidos, com uma breve oração em cada passo.' },
+    { id: 'lectio', art: 'book', icon: 'book', title: 'Lectio Divina', min: '10 min', desc: 'Leia, medite, reze e contemple uma passagem da Escritura, em português e latim.' },
+    { id: 'silencio', art: 'candle', icon: 'timer', title: 'Silêncio diante de Deus', min: '3–10 min', desc: 'Um tempo de quietude com sino suave no início e no fim.' },
+    { id: 'jaculatoria', art: 'heart', icon: 'tap', title: 'Oração do coração', min: 'livre', desc: 'Repita uma jaculatória com um toque a cada vez. Um contador simples, sem pressa.' },
+    { id: 'exame', art: 'moon', icon: 'moonstar', title: 'Exame do dia', min: '8 min', desc: 'Um exame de fim de dia: gratidão, revisão sem julgamento, perdão e confiança.' }
   ];
 
-  function tile(href, icon, title, desc, meta) {
-    return '<a class="card tile" href="' + href + '"><span class="ic-wrap">' + ic(icon) + '</span>' + (meta ? '<span class="meta">' + esc(meta) + '</span>' : '') + '<h3>' + esc(title) + '</h3><p>' + esc(desc) + '</p></a>';
+  var ART_OF = { 'kit-crise': 'dove', 'preocupacao-e-confianca': 'lily', 'ansiedade-e-fe': 'candle', 'mente-que-nao-para': 'rosary', 'noites-em-claro': 'moon', 'culpa-e-escrupulos': 'heart', 'santos-e-angustia': 'halo', 'fe-e-terapia': 'book' };
+  function pcard(href, art, badge, title, desc, go) {
+    return '<a class="pcard" href="' + href + '"><div class="cover">' + SACRED.draw(art) + (badge ? '<span class="badge">' + esc(badge) + '</span>' : '') + '</div>' +
+      '<div class="txt"><h3>' + esc(title) + '</h3><p>' + esc(desc) + '</p><span class="go">' + esc(go || 'Abrir') + ' →</span></div></a>';
+  }
+  function practiceCard(x) { return pcard('#/praticas/' + x.id, x.art, x.min, x.title, x.desc, 'Começar'); }
+  function articleCard(x) { return pcard('#/leituras/' + x.id, ART_OF[x.id], x.tag + ' · ' + x.minutes + ' min', x.title, x.lead, 'Ler'); }
+  function banner(art, eyebrow, title, desc, crumb) {
+    return '<header class="pbanner"><div class="bg">' + SACRED.draw(art) + '</div><div class="in">' + (crumb ? '<a class="crumb" href="' + crumb[0] + '">← ' + crumb[1] + '</a><br>' : '') +
+      '<span class="eyebrow">' + esc(eyebrow) + '</span><h2>' + esc(title) + '</h2>' + (desc ? '<p>' + esc(desc) + '</p>' : '') + '</div></header>';
   }
 
   var routes = {};
 
   routes[''] = function () {
     var r = D.reflections[dayIndex() % D.reflections.length], moods = load('moods', {}), sel = moods[today()];
-    var feat = ART[0], hint = A.isOn() ? '' : '<p class="hint">🎵 Toque em qualquer parte da página para iniciar a música ambiente. Você pode pausar no botão do topo.</p>';
+    var nLa = D.prayers.filter(function (p) { return p.la; }).length;
+    var feat = ['terco', 'respirar', 'aterramento', 'silencio'].map(function (id) { return PRACTICES.filter(function (x) { return x.id === id; })[0]; });
+    feat[0] = Object.assign({}, feat[0], { title: 'Terço de hoje', desc: D.mysteries[todaySet()].name + '. Reze passo a passo, com as contas marcando o ritmo.' });
     app.innerHTML =
-      '<section class="hero"><h1>Encontre paz em Deus, um passo de cada vez.</h1><p>Orações católicas em português e latim, práticas para acalmar a mente e leituras para quem convive com a ansiedade.</p>' +
-      '<div class="hero-actions"><a class="btn lg" href="#/praticas/respirar">Respirar com oração</a><a class="btn ghost lg" href="#/oracoes/Ansiedade">Rezas para ansiedade</a></div>' + hint + '</section>' +
-      '<div class="grid two" style="margin-top:14px">' +
-      '<section class="card"><span class="meta">Reflexão do dia</span><p class="verse">“' + esc(r.verse) + '”<cite>' + esc(r.ref) + '</cite></p><p>' + esc(r.text) + '</p></section>' +
-      '<section class="card"><span class="meta">Como você está agora?</span><div class="moods" role="group" aria-label="Humor" style="margin-top:10px">' +
-      D.moods.map(function (m) { return '<button data-mood="' + m.id + '" aria-pressed="' + (sel === m.id) + '"><b>' + m.glyph + '</b>' + m.label + '</button>'; }).join('') + '</div><div id="mood-out"></div></section>' +
-      '</div>' +
-      '<h3 style="margin:30px 0 12px">Para acalmar agora</h3><div class="grid">' +
-      tile('#/praticas/terco', 'beads', 'Terço de hoje', D.mysteries[todaySet()].name, 'Prática') +
-      tile('#/praticas/aterramento', 'eye', 'Aterramento 5-4-3-2-1', 'Volte ao presente com os sentidos e uma breve oração.', 'Prática') +
-      tile('#/praticas/silencio', 'timer', 'Silêncio', 'Alguns minutos de quietude com sino suave.', 'Prática') +
-      tile('#/leituras/' + feat.id, 'scroll', feat.title, feat.lead, 'Leitura · ' + feat.minutes + ' min') + '</div>';
+      '<section class="hero"><div class="hero-in"><div>' +
+      '<span class="eyebrow">Oração · Silêncio · Esperança</span>' + SACRED.ornament +
+      '<h1>Encontre <em>paz</em> em Deus, um passo de cada vez.</h1>' +
+      '<p class="sub">Orações católicas em português e latim, práticas guiadas para acalmar a mente e leituras para quem convive com a ansiedade, com canto gregoriano ao fundo.</p>' +
+      '<div class="hero-actions"><a class="btn gold lg" href="#/praticas/respirar">Respirar com oração</a><a class="btn ghost lg" href="#/oracoes/Ansiedade">Rezas para ansiedade</a></div>' +
+      '<div class="stats"><div>' + D.prayers.length + '<span>orações</span></div><div>' + nLa + '<span>em latim</span></div><div>' + PRACTICES.length + '<span>práticas guiadas</span></div><div>' + ARTS.length + '<span>leituras</span></div></div>' +
+      '</div><div class="hero-art">' + SACRED.draw('window') + '</div></div></section>' +
+
+      '<div class="wrap"><section class="blk"><div class="grid two">' +
+      '<div class="card refl"><div class="refl-art">' + SACRED.draw('lily') + '</div><span class="eyebrow">Reflexão do dia</span><p class="verse">“' + esc(r.verse) + '”<cite>' + esc(r.ref) + '</cite></p><p>' + esc(r.text) + '</p></div>' +
+      '<div class="card"><span class="eyebrow">Como você está agora?</span><p class="note" style="margin:.3em 0 0">Escolha e receba uma oração e uma prática.</p><div class="moods" role="group" aria-label="Humor">' +
+      D.moods.map(function (m) { return '<button data-mood="' + m.id + '" aria-pressed="' + (sel === m.id) + '"><b>' + m.glyph + '</b>' + m.label + '</button>'; }).join('') + '</div><div id="mood-out"></div></div>' +
+      '</div></section>' +
+
+      '<section class="blk"><div class="sec-head"><div><span class="eyebrow">Práticas</span><h2>Para acalmar agora</h2><p>Exercícios curtos de oração para o corpo e a mente.</p></div><a class="more" href="#/praticas">Ver todas →</a></div>' +
+      '<div class="grid">' + feat.map(practiceCard).join('') + '</div></section>' +
+
+      '<section class="blk"><div class="band"><div class="bg">' + SACRED.draw('dove') + '</div><div class="in">' +
+      '<span class="eyebrow">Palavra de Deus</span><blockquote>“Deixo-vos a paz, dou-vos a minha paz. Não se perturbe o vosso coração.”</blockquote>' +
+      '<p class="la">Pacem relinquo vobis, pacem meam do vobis… Non turbetur cor vestrum.</p><cite>JOÃO 14,27</cite>' +
+      '<div class="row" style="margin-top:20px"><a class="btn gold" href="#/praticas/lectio">Fazer Lectio Divina</a></div></div></div></section>' +
+
+      '<section class="blk"><div class="sec-head"><div><span class="eyebrow">Leituras</span><h2>Fé e ansiedade</h2><p>Textos breves para compreender e acolher o que você sente.</p></div><a class="more" href="#/leituras">Ver todas →</a></div>' +
+      '<div class="grid">' + ARTS.slice(0, 4).map(articleCard).join('') + '</div></section>' +
+
+      '<section class="blk"><div class="card crisis"><div class="row" style="justify-content:space-between"><div style="max-width:60ch"><h3>Está difícil demais agora?</h3><p>Você não precisa passar por isso sozinho(a). O CVV atende 24 horas, de graça e em sigilo.</p></div>' +
+      '<div class="row"><a class="btn" href="tel:188">Ligar 188</a><a class="btn outline-w" href="#/ajuda">Outros contatos</a></div></div></div></section></div>';
     function show(id) {
       var m = D.moods.filter(function (x) { return x.id === id; })[0], p = pid(m.prayer);
       var links = (m.act || []).map(function (a) { var pr = PRACTICES.filter(function (x) { return x.id === a; })[0]; return pr ? '<a class="btn ghost" href="#/praticas/' + a + '">' + esc(pr.title) + '</a>' : '<a class="btn ghost" href="#/diario">Escrever no diário</a>'; }).join(' ');
-      $('#mood-out').innerHTML = '<p style="margin-top:14px">' + esc(m.tip) + '</p>' + prayerCard(p, true) + (links ? '<div class="row">' + links + '</div>' : '') +
+      $('#mood-out').innerHTML = '<p style="margin-top:16px">' + esc(m.tip) + '</p>' + prayerCard(p, true) + (links ? '<div class="row">' + links + '</div>' : '') +
         ((id === 'ansioso' || id === 'triste') ? '<p class="note">Se a angústia estiver muito forte, <a href="#/ajuda">procure apoio agora</a>.</p>' : '');
     }
     if (sel) show(sel);
@@ -132,22 +160,23 @@
   routes.oracoes = function (parts) {
     var f = parts[1] ? decodeURIComponent(parts[1]) : '';
     var list = D.prayers.filter(function (p) { return !f || p.cat === f; });
-    app.innerHTML = '<div class="page-head"><h2>Orações</h2><p>Textos tradicionais em português e latim. Escolha o idioma no topo da página.</p></div>' +
-      '<div class="chips"><a class="chip" href="#/oracoes" aria-current="' + !f + '">Todas</a>' +
+    app.innerHTML = banner('window', 'Orações', f ? 'Orações · ' + f : 'Orações', 'Textos tradicionais em português e latim. Use PT, LA ou PT·LA no topo para trocar o idioma.') +
+      '<div class="wrap" style="margin-top:28px"><div class="chips"><a class="chip" href="#/oracoes" aria-current="' + !f + '">Todas</a>' +
       D.categories.map(function (c) { return '<a class="chip" href="#/oracoes/' + encodeURIComponent(c) + '" aria-current="' + (f === c) + '">' + c + '</a>'; }).join('') + '</div>' +
-      list.map(function (p, i) { return prayerCard(p, list.length === 1 || (f && i === 0)); }).join('');
+      list.map(function (p, i) { return prayerCard(p, list.length === 1 || (f && i === 0)); }).join('') + '</div>';
   };
 
   routes.leituras = function (parts) {
-    var a = parts[1] && ART.filter(function (x) { return x.id === parts[1]; })[0];
+    var a = parts[1] && ARTS.filter(function (x) { return x.id === parts[1]; })[0];
     if (!a) {
-      app.innerHTML = '<div class="page-head"><h2>Leituras</h2><p>Textos para acolher a ansiedade e a angústia à luz da fé, cada um com uma oração no final.</p></div><div class="grid">' +
-        ART.map(function (x) { return tile('#/leituras/' + x.id, 'scroll', x.title, x.lead, x.tag + ' · ' + x.minutes + ' min'); }).join('') + '</div>';
+      app.innerHTML = banner('book', 'Leituras', 'Fé e ansiedade', 'Textos para acolher a ansiedade e a angústia à luz da fé, cada um com uma oração no final.') +
+        '<div class="wrap" style="margin-top:32px"><div class="grid">' + ARTS.map(articleCard).join('') + '</div></div>';
       return;
     }
-    var n = ART[(ART.indexOf(a) + 1) % ART.length];
+    var n = ARTS[(ARTS.indexOf(a) + 1) % ARTS.length];
     var v = a.verse ? '<p class="verse">“' + esc(lang === 'la' && a.verse.la ? a.verse.la : a.verse.pt) + '”<cite>' + esc(a.verse.ref) + '</cite></p>' : '';
-    app.innerHTML = '<article class="article"><a class="crumb" href="#/leituras">← Todas as leituras</a><span class="tag">' + esc(a.tag) + '</span><h2>' + esc(a.title) + '</h2><p class="lead">' + esc(a.lead) + '</p>' + v +
+    app.innerHTML = banner(ART_OF[a.id], a.tag + ' · ' + a.minutes + ' min de leitura', a.title, '', ['#/leituras', 'Todas as leituras']) +
+      '<article class="article"><p class="lead">' + esc(a.lead) + '</p>' + v +
       a.body.map(function (p) { return '<p>' + p + '</p>'; }).join('') +
       '<div class="pbox"><span class="lbl">Oração</span><p class="prayer">' + esc(a.prayer) + '</p></div>' +
       '<div class="row"><a class="btn" href="#/leituras/' + n.id + '">Próxima: ' + esc(n.title) + '</a><a class="btn ghost" href="#/ajuda">Preciso de apoio</a></div></article>';
@@ -155,8 +184,8 @@
 
   routes.diario = function () {
     var entries = load('journal', []);
-    app.innerHTML = '<div class="page-head"><h2>Diário</h2><p>Escreva o que quer agradecer ou entregar a Deus. As anotações ficam apenas neste aparelho.</p></div>' +
-      '<section class="card"><label for="t" class="meta">O que está no seu coração hoje?</label><textarea id="t" style="margin-top:8px"></textarea><div class="row" style="margin-top:12px"><button class="btn" id="s">Salvar</button></div></section><section id="list"></section>';
+    app.innerHTML = banner('candle', 'Diário', 'Diário da alma', 'Escreva o que quer agradecer ou entregar a Deus. As anotações ficam apenas neste aparelho.') +
+      '<div class="wrap" style="max-width:780px"><div class="panel"><label for="t" class="eyebrow">O que está no seu coração hoje?</label><textarea id="t" style="margin-top:10px" placeholder="Senhor, hoje eu te agradeço por…"></textarea><div class="row" style="margin-top:14px"><button class="btn" id="s">Salvar anotação</button></div></div><section id="list" style="margin-top:24px"></section></div>';
     function render() {
       $('#list').innerHTML = entries.map(function (e, n) {
         return '<div class="entry"><span class="meta">' + esc(e.d) + '</span><p class="prayer">' + esc(e.t) + '</p><button class="btn ghost" data-del="' + n + '">Apagar</button></div>';
@@ -171,24 +200,24 @@
   };
 
   routes.ajuda = function () {
-    app.innerHTML = '<div class="page-head"><h2>Ajuda e apoio</h2></div>' +
-      '<section class="card" style="border-color:var(--danger)"><h3>Se você está em crise</h3><p><strong>Se está pensando em se machucar ou tirar a própria vida, ligue agora para o 188 (CVV) ou 192 (SAMU).</strong> Você não precisa passar por isso sozinho(a). Procure também uma pessoa de confiança que possa ficar ao seu lado.</p></section>' +
-      '<div class="grid">' + D.help.map(function (h) {
+    app.innerHTML = banner('halo', 'Ajuda e apoio', 'Você não está sozinho(a)', 'Oração e cuidado profissional caminham juntos. Procure ajuda sempre que precisar.') +
+      '<div class="wrap"><div class="panel crisis"><h3>Se você está em crise</h3><p><strong>Se está pensando em se machucar ou tirar a própria vida, ligue agora para o 188 (CVV) ou 192 (SAMU).</strong> Procure também uma pessoa de confiança que possa ficar ao seu lado.</p><div class="row"><a class="btn" href="tel:188">Ligar 188</a><a class="btn" href="tel:192">Ligar 192</a></div></div>' +
+      '<div class="grid" style="margin-top:22px">' + D.help.map(function (h) {
         return '<section class="card"><h3>' + esc(h.name) + '</h3><p>' + esc(h.desc) + '</p><div class="row">' +
           (h.tel ? '<a class="btn" href="tel:' + h.tel + '">Ligar ' + h.tel + '</a>' : '') +
           (h.link ? '<a class="btn ghost" href="' + h.link + '" target="_blank" rel="noopener">Site</a>' : '') + '</div></section>';
       }).join('') + '</div>' +
-      '<section class="card"><h3>Apoio espiritual</h3><p>Converse com seu pároco, um diretor espiritual ou uma pastoral da sua comunidade. Oração e acompanhamento profissional caminham juntos.</p><div class="row"><a class="btn ghost" href="#/leituras/fe-e-terapia">Fé e terapia caminham juntas</a><a class="btn ghost" href="#/oracoes/Consolo">Orações de consolo</a></div></section>';
+      '<section class="card"><h3>Apoio espiritual</h3><p>Converse com seu pároco, um diretor espiritual ou uma pastoral da sua comunidade.</p><div class="row"><a class="btn ghost" href="#/leituras/fe-e-terapia">Fé e terapia caminham juntas</a><a class="btn ghost" href="#/oracoes/Consolo">Orações de consolo</a></div></section></div>';
   };
 
   routes.praticas = function (parts) {
     var p = parts[1] && PRACTICES.filter(function (x) { return x.id === parts[1]; })[0];
     if (!p) {
-      app.innerHTML = '<div class="page-head"><h2>Práticas</h2><p>Exercícios de oração para acalmar o corpo e a mente. Deixe a música ambiente tocando, se ajudar.</p></div><div class="grid">' +
-        PRACTICES.map(function (x) { return tile('#/praticas/' + x.id, x.icon, x.title, x.desc, x.min); }).join('') + '</div>';
+      app.innerHTML = banner('candle', 'Práticas', 'Práticas guiadas', 'Exercícios de oração para acalmar o corpo e a mente. Deixe o canto gregoriano tocando, se ajudar.') +
+        '<div class="wrap" style="margin-top:32px"><div class="grid">' + PRACTICES.map(practiceCard).join('') + '</div></div>';
       return;
     }
-    app.innerHTML = '<a class="crumb" href="#/praticas">← Todas as práticas</a><div class="page-head"><h2>' + esc(p.title) + '</h2></div><div id="pr"></div>';
+    app.innerHTML = banner(p.art, 'Prática · ' + p.min, p.title, p.desc, ['#/praticas', 'Todas as práticas']) + '<div class="wrap" style="max-width:820px"><div class="panel" id="pr"></div></div>';
     PR[p.id]($('#pr'));
   };
 
@@ -363,17 +392,23 @@
 
   function syncMusic() {
     var b = $('#music'), on = A.isOn();
-    b.setAttribute('aria-pressed', on); b.classList.toggle('playing', on);
-    b.innerHTML = ic(on ? 'music' : 'mute');
-    b.title = on ? 'Pausar música ambiente' : 'Tocar música ambiente';
-    var h = $('.hint'); if (h && on) h.remove();
+    b.setAttribute('aria-pressed', on); $('#player').classList.toggle('on', on);
+    b.innerHTML = ic(on ? 'pause' : 'play');
+    b.setAttribute('aria-label', on ? 'Pausar música ambiente' : 'Tocar música ambiente');
+    $('#pstate').textContent = on ? 'Tocando · modo dórico' : 'Pausado · toque para ouvir';
+  }
+  function syncLang() {
+    $$('[data-lang]').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.lang === lang); });
+    $('#langc').textContent = { pt: 'PT', la: 'LA', both: 'P·L' }[lang];
   }
   function syncTheme() { var d = document.documentElement.dataset.theme === 'dark'; $('#theme').innerHTML = ic(d ? 'sun' : 'moon'); }
 
   function init() {
     buildNav();
-    $$('[data-lang]').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.lang === lang); b.onclick = function () { setLang(b.dataset.lang); }; });
-    var vol = load('vol', 50); $('#vol').value = vol; A.setVolume(vol / 100);
+    $$('[data-lang]').forEach(function (b) { b.onclick = function () { setLang(b.dataset.lang); }; });
+    $('#langc').onclick = function () { setLang({ pt: 'la', la: 'both', both: 'pt' }[lang]); };
+    syncLang();
+    var vol = load('vol', 70); $('#vol').value = vol; A.setVolume(vol / 100);
     $('#vol').oninput = function () { save('vol', +this.value); A.setVolume(this.value / 100); };
     A.onchange(syncMusic); syncMusic(); syncTheme();
     $('#music').onclick = function (e) { e.stopPropagation(); save('music', A.isOn() ? 'off' : 'on'); A.toggle(); };
@@ -383,7 +418,7 @@
     };
     // Navegadores só liberam áudio após um gesto do usuário: inicia na primeira interação, salvo se o usuário pausou.
     function first(e) {
-      if (e.target.closest && e.target.closest('#music, #vol')) return;
+      if (e.target.closest && e.target.closest('#player')) return;
       document.removeEventListener('pointerdown', first, true);
       if (load('music', 'on') !== 'off') A.start();
     }

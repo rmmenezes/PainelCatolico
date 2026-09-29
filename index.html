@@ -2,14 +2,16 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Paz em Oração — Oração católica e saúde mental</title>
-<meta name="description" content="Orações católicas em português e latim, terço guiado, respiração com oração, música ambiente gregoriana e leituras para ansiedade.">
-<meta name="theme-color" content="#1c2247">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231c2247'/%3E%3Cpath d='M16 6v20M9 12h14' stroke='%23d9b45f' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
+<meta name="description" content="Orações católicas em português e latim, terço guiado, respiração com oração, música gregoriana ambiente e leituras para a ansiedade.">
+<meta name="theme-color" content="#11153a">
+<meta property="og:title" content="Paz em Oração">
+<meta property="og:description" content="Oração católica e cuidado da saúde mental: orações em latim, práticas guiadas e leituras para a ansiedade.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2311153a'/%3E%3Cpath d='M16 6v20M9 12h14' stroke='%23d9b45f' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="src/styles.css">
 <script>try{var t=localStorage.getItem('theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.dataset.theme=t}catch(e){}</script>
 </head>
@@ -19,7 +21,7 @@
 <header class="top">
   <div class="top-in">
     <a class="brand" href="#/" aria-label="Paz em Oração — início">
-      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9"/><path d="M16 6v20M9 12h14"/></svg>
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="15"/><path d="M16 7v18M10 13h12"/></svg>
       <span>Paz em Oração</span>
     </a>
     <nav class="dnav" aria-label="Principal"></nav>
@@ -27,27 +29,46 @@
       <div class="seg" role="group" aria-label="Idioma das orações">
         <button data-lang="pt" title="Português">PT</button>
         <button data-lang="la" title="Latim">LA</button>
-        <button data-lang="both" title="Português e Latim lado a lado">PT·LA</button>
+        <button data-lang="both" title="Português e latim lado a lado">PT·LA</button>
       </div>
-      <button class="icon-btn" id="music" aria-pressed="false" title="Música ambiente" aria-label="Música ambiente"></button>
-      <input id="vol" type="range" min="0" max="100" value="50" aria-label="Volume da música" title="Volume">
+      <button class="icon-btn" id="langc" title="Idioma das orações" aria-label="Trocar idioma das orações"></button>
       <button class="icon-btn" id="theme" title="Alternar tema" aria-label="Alternar tema claro e escuro"></button>
-      <a class="sos" href="#/ajuda">Preciso de ajuda</a>
+      <a class="sos" href="#/ajuda"><span class="sos-full">Preciso de ajuda</span><span class="sos-short">SOS</span></a>
     </div>
   </div>
 </header>
 
 <main id="app" tabindex="-1"></main>
 
+<div class="player" id="player">
+  <button class="play" id="music" aria-pressed="false" aria-label="Tocar música ambiente"></button>
+  <div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+  <div class="ptxt"><strong>Canto gregoriano</strong><span id="pstate">Toque para ouvir</span></div>
+  <input id="vol" type="range" min="0" max="100" value="70" aria-label="Volume da música">
+</div>
+
 <nav class="bnav" aria-label="Navegação"></nav>
 
 <footer class="foot">
-  <p><strong>Paz em Oração</strong> oferece apoio espiritual e de bem-estar. Não substitui atendimento psicológico, psiquiátrico ou médico. Em crise, ligue 188 (CVV) ou 192 (SAMU).</p>
-  <p>A música ambiente é gerada no seu navegador. Seus dados (diário, humor) ficam somente neste aparelho.</p>
+  <div class="foot-in">
+    <div>
+      <p class="foot-brand">✝ Paz em Oração</p>
+      <p>Apoio espiritual católico e cuidado com a saúde mental. Não substitui atendimento psicológico, psiquiátrico ou médico.</p>
+    </div>
+    <div>
+      <p class="foot-h">Em crise?</p>
+      <p><a href="tel:188">CVV 188</a> · <a href="tel:192">SAMU 192</a> · <a href="#/ajuda">Mais apoio</a></p>
+    </div>
+    <div>
+      <p class="foot-h">Privacidade</p>
+      <p>Diário e humor ficam só neste aparelho. A música é gerada no seu navegador.</p>
+    </div>
+  </div>
 </footer>
 
 <script src="src/data.js"></script>
 <script src="src/articles.js"></script>
+<script src="src/art.js"></script>
 <script src="src/audio.js"></script>
 <script src="src/app.js"></script>
 </body>

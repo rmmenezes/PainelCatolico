@@ -14,6 +14,7 @@ Plataforma web de oração católica e apoio à saúde mental (pt-BR). Sem depen
 ## Estrutura
 - `index.html`: casca da página
 - `src/data.js`: orações, mistérios, práticas · `src/articles.js`: leituras
+- `src/art.js`: ilustrações sacras em SVG (vitral, terço, pomba, velas, Bíblia, Sagrado Coração, lírios, noite)
 - `src/audio.js`: música ambiente · `src/app.js`: telas · `src/styles.css`: visual
 
 ## Publicar no GitHub Pages

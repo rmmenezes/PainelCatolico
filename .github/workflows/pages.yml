@@ -1,7 +1,7 @@
 name: Publicar no GitHub Pages
 on:
   push:
-    branches: [main, claude/plataforma-oracao-saude-mental-1t6l4z]
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read

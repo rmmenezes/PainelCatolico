@@ -1,7 +1,7 @@
 // Conteúdo do app. Orações tradicionais (domínio público) em português e latim;
 // textos de reflexão e orações marcadas como "originais" foram escritos para este projeto.
 window.DATA = {
-  categories: ['Clássicas', 'Ansiedade', 'Noite', 'Paz', 'Consolo', 'Jaculatórias'],
+  categories: ['Clássicas', 'Ansiedade', 'Noite', 'Paz', 'Consolo', 'Jaculatórias', 'Cantos tradicionais'],
 
   prayers: [
     { id: 'sinal-cruz', cat: 'Clássicas', title: 'Sinal da Cruz', latin: 'Signum Crucis',
@@ -68,6 +68,16 @@ window.DATA = {
       pt: 'Senhor misericordioso,\nTu és maior que o meu coração e conheces tudo.\nSe errei, dá-me a graça do arrependimento sereno, não da angústia que paralisa.\nQuero acolher o Teu perdão e perdoar a mim mesmo.\nJesus, eu confio em Vós. Amém.' },
     { id: 'cuidadores', cat: 'Consolo', title: 'Por quem sofre comigo', latin: null,
       pt: 'Senhor, abençoa quem sofre de ansiedade, depressão e solidão,\ne quem cuida dessas pessoas.\nDá paciência às famílias, sabedoria aos profissionais de saúde\ne a todos a certeza de que ninguém caminha sozinho. Amém.' },
+    // Cantos tradicionais brasileiros (letras antigas, de domínio público; há variações regionais)
+    { id: 'treze-maio', cat: 'Cantos tradicionais', title: 'A treze de maio', latin: null,
+      pt: 'A treze de maio, na Cova da Iria,\nno céu aparece a Virgem Maria.\nAve, ave, ave Maria! Ave, ave, ave Maria!\n\nA três pastorinhos, cercada de luz,\nvisita Maria, a Mãe de Jesus.\nAve, ave, ave Maria! Ave, ave, ave Maria!' },
+    { id: 'queremos-deus', cat: 'Cantos tradicionais', title: 'Queremos Deus', latin: null,
+      pt: 'Queremos Deus! Homens ingratos,\nao Pai supremo, ao Redentor,\nzombam da fé os insensatos,\nerguem-se em vão contra o Senhor.\n\nDa nossa fé, ó Virgem,\no brado abençoai:\nQueremos Deus, que é nosso Rei!\nQueremos Deus, que é nosso Pai!' },
+    { id: 'com-minha-mae', cat: 'Cantos tradicionais', title: 'Com minha Mãe estarei', latin: null,
+      pt: 'Com minha Mãe estarei\nna santa glória um dia;\njunto à Virgem Maria,\nno céu triunfarei.\n\nNo céu, no céu,\ncom minha Mãe estarei!\nNo céu, no céu,\ncom minha Mãe estarei!' },
+    { id: 'tantum-ergo', cat: 'Cantos tradicionais', title: 'Tão sublime sacramento', latin: 'Tantum ergo',
+      pt: 'Tão sublime sacramento\nadoremos neste altar,\npois o Antigo Testamento\ndeu ao Novo o seu lugar.\nVenha a fé, por suplemento,\nos sentidos completar.',
+      la: 'Tantum ergo Sacramentum\nveneremur cernui:\net antiquum documentum\nnovo cedat ritui:\npraestet fides supplementum\nsensuum defectui.' },
     // Jaculatórias
     { id: 'jac-confio', cat: 'Jaculatórias', title: 'Jesus, eu confio em Vós', latin: 'Iesu, in te confido',
       pt: 'Jesus, eu confio em Vós.', la: 'Iesu, in te confido.' },

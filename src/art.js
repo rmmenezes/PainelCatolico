@@ -122,6 +122,12 @@ window.SACRED = (function () {
       s += '<text x="200" y="126" text-anchor="middle" font-family="Cormorant Garamond,Georgia,serif" font-size="46" font-weight="700" fill="' + C.gold2 + '">M</text>';
       return svg(s, 'Coroa de doze estrelas');
     },
+    // Glória: raios e auréola, sem letra (fundo das páginas dos santos)
+    glory: function (i) {
+      var s = base(i, '#1d2a6a', '#0b1030', null, 280, 110) + rays(280, 110, 32, 300, 0.7, i) + '<circle cx="280" cy="110" r="130" fill="url(#gl' + i + ')"/>' + stars(30, 13, 240);
+      s += '<circle cx="280" cy="110" r="70" fill="none" stroke="url(#gd' + i + ')" stroke-width="4" opacity=".7"/><circle cx="280" cy="110" r="60" fill="none" stroke="#d9b45f" stroke-width="1" opacity=".4"/>';
+      return svg(s, 'Glória dos santos');
+    },
     // Vitral gótico com rosácea — ilustração principal (retrato)
     window: function (i) {
       var s = '<defs><linearGradient id="bg' + i + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1f2760"/><stop offset="1" stop-color="#0a0d22"/></linearGradient>' +
@@ -161,7 +167,20 @@ window.SACRED = (function () {
     }
   };
 
+  // Medalhão de santo: iniciais sob auréola dourada.
+  function medal(name, c) {
+    n++; var i = n, ini = name.replace(/^(Santa|Santo|São|Beato)\s+/, '').split(/\s+/).filter(function (w) { return w.length > 2 && w[0] === w[0].toUpperCase(); }).slice(0, 2).map(function (w) { return w[0]; }).join('');
+    var s = '<defs><radialGradient id="md' + i + '" cx=".5" cy=".35" r=".8"><stop offset="0" stop-color="' + c[0] + '"/><stop offset="1" stop-color="' + c[1] + '"/></radialGradient>' +
+      '<linearGradient id="gd' + i + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6e3a6"/><stop offset=".5" stop-color="#d9b45f"/><stop offset="1" stop-color="#9c7424"/></linearGradient></defs>' +
+      '<circle cx="60" cy="60" r="58" fill="url(#md' + i + ')"/><circle cx="60" cy="60" r="54" fill="none" stroke="url(#gd' + i + ')" stroke-width="3"/>' +
+      '<circle cx="60" cy="60" r="47" fill="none" stroke="#f3e2ad" stroke-opacity=".35" stroke-width="1" stroke-dasharray="2 4"/>' +
+      '<ellipse cx="60" cy="30" rx="20" ry="5" fill="none" stroke="url(#gd' + i + ')" stroke-width="2.5"/>' +
+      '<text x="60" y="78" text-anchor="middle" font-family="Cormorant Garamond,Georgia,serif" font-size="38" font-weight="700" fill="#f7f0e0">' + ini + '</text>';
+    return '<svg class="art" viewBox="0 0 120 120" role="img" aria-label="' + name + '">' + s + '</svg>';
+  }
+
   return {
+    medal: medal,
     draw: function (kind) { n++; return (draw[kind] || draw.halo)(n); },
     ornament: '<svg class="orn" viewBox="0 0 240 20" aria-hidden="true"><path d="M0 10H96M144 10H240" stroke="currentColor" stroke-width="1"/><path d="M120 2V18M113 8H127" stroke="currentColor" stroke-width="1.6"/><circle cx="104" cy="10" r="2" fill="currentColor"/><circle cx="136" cy="10" r="2" fill="currentColor"/></svg>'
   };

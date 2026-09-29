@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  var D = window.DATA, ARTS = window.ARTICLES, A = window.Ambient, app = document.getElementById('app');
+  var D = window.DATA, ARTS = window.ARTICLES, SAINTS = window.SAINTS, A = window.Ambient, app = document.getElementById('app');
 
   /* ---------- utilidades ---------- */
   function load(k, def) { try { var v = JSON.parse(localStorage.getItem(k)); return v === null ? def : v; } catch (e) { return def; } }
@@ -31,6 +31,10 @@
     play: '<path d="M8 5v14l11-7z"/>',
     pause: '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>',
     arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+    saint: '<ellipse cx="12" cy="3.5" rx="4.5" ry="1.3"/><circle cx="12" cy="9" r="3.2"/><path d="M5 21c0-4 3-7 7-7s7 3 7 7"/>',
+    list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+    next: '<path d="M5 5l9 7-9 7zM18 5v14"/>',
+    copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>',
     tap: '<path d="M9 11V5a2 2 0 0 1 4 0v6M13 9a2 2 0 0 1 4 0v3a6 6 0 0 1-6 6h-1a5 5 0 0 1-4-2l-2-3a2 2 0 0 1 3-2l1 1"/>'
   };
   function ic(n) { return '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">' + (ICONS[n] || '') + '</svg>'; }
@@ -82,7 +86,7 @@
   }
 
   /* ---------- telas ---------- */
-  var NAV = [['', 'Início', 'home'], ['oracoes', 'Orações', 'book'], ['praticas', 'Práticas', 'heart'], ['leituras', 'Leituras', 'scroll'], ['diario', 'Diário', 'pen']];
+  var NAV = [['', 'Início', 'home'], ['oracoes', 'Orações', 'book'], ['praticas', 'Práticas', 'heart'], ['santos', 'Santos', 'saint'], ['leituras', 'Leituras', 'scroll'], ['diario', 'Diário', 'pen']];
 
   var PRACTICES = [
     { id: 'terco', art: 'rosary', icon: 'beads', title: 'Santo Terço guiado', min: '20 min', desc: 'Reze o terço passo a passo, com os mistérios do dia e as orações em português e latim.' },
@@ -101,6 +105,36 @@
   }
   function practiceCard(x) { return pcard('#/praticas/' + x.id, x.art, x.min, x.title, x.desc, 'Começar'); }
   function articleCard(x) { return pcard('#/leituras/' + x.id, ART_OF[x.id], x.tag + ' · ' + x.minutes + ' min', x.title, x.lead, 'Ler'); }
+  /* ---------- santos ---------- */
+  function allQuotes() {
+    var out = [];
+    SAINTS.forEach(function (st) { st.quotes.forEach(function (q) { out.push({ q: q, s: st }); }); });
+    return out;
+  }
+  function quoteText(q) { return (lang === 'la' && q.la) ? q.la : q.pt; }
+  function quoteCard(x, big) {
+    var q = x.q, st = x.s, sec = '';
+    if (lang === 'both' && q.la) sec = '<p class="q-sec" lang="la">' + esc(q.la) + '</p>';
+    else if (q.orig) sec = '<p class="q-sec">' + esc(q.orig) + '</p>';
+    return '<figure class="qcard' + (big ? ' big' : '') + '">' + (big === 'feature' ? '<div class="q-bg">' + SACRED.draw('glory') + '</div>' : '') + '<blockquote>“' + esc(quoteText(q)) + '”</blockquote>' + sec +
+      '<figcaption><a class="q-who" href="#/santos/' + st.id + '"><span class="q-medal">' + SACRED.medal(st.name, st.colors) + '</span><span><strong>' + esc(st.name) + '</strong><small>' + esc(q.src) + (q.attr ? ' · atribuída' : '') + '</small></span></a>' +
+      '<button class="icon-btn q-copy" data-copy="' + esc('“' + q.pt + '” — ' + st.name) + '" aria-label="Copiar frase" title="Copiar frase">' + ic('copy') + '</button></figcaption></figure>';
+  }
+  function saintCard(st) {
+    return '<a class="scard" href="#/santos/' + st.id + '"><span class="s-medal">' + SACRED.medal(st.name, st.colors) + '</span><span class="s-txt"><strong>' + esc(st.name) + '</strong><small>' + esc(st.dates) + ' · ' + esc(st.title) + '</small>' +
+      '<em>“' + esc(st.quotes[0].pt.length > 95 ? st.quotes[0].pt.slice(0, 92).replace(/\s+\S*$/, '') + '…' : st.quotes[0].pt) + '”</em></span></a>';
+  }
+  function bindCopy(root) {
+    $$('[data-copy]', root).forEach(function (b) {
+      b.onclick = function (e) {
+        e.preventDefault();
+        var t = b.dataset.copy, done = function () { b.classList.add('ok'); b.title = 'Copiada!'; setTimeout(function () { b.classList.remove('ok'); }, 1500); };
+        if (navigator.share && matchMedia('(pointer:coarse)').matches) navigator.share({ text: t }).catch(function () {});
+        else if (navigator.clipboard) navigator.clipboard.writeText(t).then(done, function () {});
+      };
+    });
+  }
+
   function banner(art, eyebrow, title, desc, crumb) {
     return '<header class="pbanner"><div class="bg">' + SACRED.draw(art) + '</div><div class="in">' + (crumb ? '<a class="crumb" href="' + crumb[0] + '">← ' + crumb[1] + '</a><br>' : '') +
       '<span class="eyebrow">' + esc(eyebrow) + '</span><h2>' + esc(title) + '</h2>' + (desc ? '<p>' + esc(desc) + '</p>' : '') + '</div></header>';
@@ -119,7 +153,7 @@
       '<h1>Encontre <em>paz</em> em Deus, um passo de cada vez.</h1>' +
       '<p class="sub">Orações católicas em português e latim, práticas guiadas para acalmar a mente e leituras para quem convive com a ansiedade, com canto gregoriano ao fundo.</p>' +
       '<div class="hero-actions"><a class="btn gold lg" href="#/praticas/respirar">Respirar com oração</a><a class="btn ghost lg" href="#/oracoes/Ansiedade">Rezas para ansiedade</a></div>' +
-      '<div class="stats"><div>' + D.prayers.length + '<span>orações</span></div><div>' + nLa + '<span>em latim</span></div><div>' + PRACTICES.length + '<span>práticas guiadas</span></div><div>' + ARTS.length + '<span>leituras</span></div></div>' +
+      '<div class="stats"><div>' + D.prayers.length + '<span>orações</span></div><div>' + SAINTS.length + '<span>santos</span></div><div>' + nLa + '<span>em latim</span></div><div>' + PRACTICES.length + '<span>práticas guiadas</span></div><div>' + ARTS.length + '<span>leituras</span></div></div>' +
       '</div><div class="hero-art">' + SACRED.draw('window') + '</div></div></section>' +
 
       '<div class="wrap"><section class="blk"><div class="grid two">' +
@@ -130,6 +164,9 @@
 
       '<section class="blk"><div class="sec-head"><div><span class="eyebrow">Práticas</span><h2>Para acalmar agora</h2><p>Exercícios curtos de oração para o corpo e a mente.</p></div><a class="more" href="#/praticas">Ver todas →</a></div>' +
       '<div class="grid">' + feat.map(practiceCard).join('') + '</div></section>' +
+
+      '<section class="blk"><div class="sec-head"><div><span class="eyebrow">Os santos na tribulação</span><h2>Palavra dos santos</h2><p>Eles também conheceram o medo, a doença e a escuridão, e nos deixaram conselhos.</p></div><a class="more" href="#/santos">Ver todos os santos →</a></div>' +
+      '<div class="saints-home">' + quoteCard(allQuotes()[dayIndex() % allQuotes().length], 'feature') + '<div class="scol">' + [0, 1, 2].map(function (k) { return saintCard(SAINTS[(dayIndex() * 3 + k) % SAINTS.length]); }).join('') + '</div></div></section>' +
 
       '<section class="blk"><div class="band"><div class="bg">' + SACRED.draw('dove') + '</div><div class="in">' +
       '<span class="eyebrow">Palavra de Deus</span><blockquote>“Deixo-vos a paz, dou-vos a minha paz. Não se perturbe o vosso coração.”</blockquote>' +
@@ -147,6 +184,7 @@
       $('#mood-out').innerHTML = '<p style="margin-top:16px">' + esc(m.tip) + '</p>' + prayerCard(p, true) + (links ? '<div class="row">' + links + '</div>' : '') +
         ((id === 'ansioso' || id === 'triste') ? '<p class="note">Se a angústia estiver muito forte, <a href="#/ajuda">procure apoio agora</a>.</p>' : '');
     }
+    bindCopy(app);
     if (sel) show(sel);
     $$('[data-mood]').forEach(function (b) {
       b.onclick = function () {
@@ -164,6 +202,34 @@
       '<div class="wrap" style="margin-top:28px"><div class="chips"><a class="chip" href="#/oracoes" aria-current="' + !f + '">Todas</a>' +
       D.categories.map(function (c) { return '<a class="chip" href="#/oracoes/' + encodeURIComponent(c) + '" aria-current="' + (f === c) + '">' + c + '</a>'; }).join('') + '</div>' +
       list.map(function (p, i) { return prayerCard(p, list.length === 1 || (f && i === 0)); }).join('') + '</div>';
+  };
+
+  routes.santos = function (parts) {
+    var st = parts[1] && SAINTS.filter(function (x) { return x.id === parts[1]; })[0];
+    if (!st) {
+      var theme = parts[1] === 'tema' && parts[2] ? decodeURIComponent(parts[2]) : '';
+      var themes = []; allQuotes().forEach(function (x) { (x.q.themes || []).forEach(function (t) { if (themes.indexOf(t) < 0) themes.push(t); }); });
+      themes.sort();
+      var qs = allQuotes().filter(function (x) { return !theme || (x.q.themes || []).indexOf(theme) > -1; });
+      app.innerHTML = banner('glory', 'Santos', 'Os santos na tribulação', 'Homens e mulheres que conheceram a angústia, a doença, o medo e a escuridão, e encontraram em Deus a força para seguir. Suas palavras e conselhos para os nossos dias difíceis.') +
+        '<div class="wrap"><section class="blk" style="margin-top:32px"><div class="sec-head"><div><span class="eyebrow">Conheça</span><h2>Companheiros de caminhada</h2></div></div><div class="sgrid">' + SAINTS.map(saintCard).join('') + '</div></section>' +
+        '<section class="blk" id="frases"><div class="sec-head"><div><span class="eyebrow">Frases dos santos</span><h2>Palavras para a tribulação</h2><p>Filtre pelo que você está vivendo. Toque no ícone para copiar ou compartilhar.</p></div></div>' +
+        '<div class="chips"><a class="chip" href="#/santos/tema" aria-current="' + !theme + '">Todas</a>' + themes.map(function (t) { return '<a class="chip" href="#/santos/tema/' + encodeURIComponent(t) + '" aria-current="' + (t === theme) + '">' + esc(t) + '</a>'; }).join('') + '</div>' +
+        '<div class="qwall">' + qs.map(function (x) { return quoteCard(x); }).join('') + '</div>' +
+        '<p class="note">Citações com a fonte indicada. As marcadas como “atribuída” são tradicionalmente ligadas ao santo, sem fonte documental precisa.</p></section></div>';
+      bindCopy(app);
+      if (parts[1] === 'tema') setTimeout(function () { var f = $('#frases'); if (f) f.scrollIntoView(); }, 0);
+      return;
+    }
+    var k = SAINTS.indexOf(st), nx = SAINTS[(k + 1) % SAINTS.length];
+    app.innerHTML = '<header class="pbanner sbanner"><div class="bg">' + SACRED.draw('glory') + '</div><div class="in"><a class="crumb" href="#/santos">← Todos os santos</a><div class="sb-row"><span class="sb-medal">' + SACRED.medal(st.name, st.colors) + '</span><div>' +
+      '<span class="eyebrow">' + esc(st.dates) + ' · ' + esc(st.title) + '</span><h2>' + esc(st.name) + '</h2><div class="row" style="margin-top:10px">' + st.themes.map(function (t) { return '<a class="tag" href="#/santos/tema/' + encodeURIComponent(t) + '">' + esc(t) + '</a>'; }).join('') + '</div></div></div></div></header>' +
+      '<article class="article"><h3 class="h-sec">Na tribulação</h3><p>' + esc(st.trial) + '</p>' +
+      '<h3 class="h-sec">Suas palavras</h3>' + st.quotes.map(function (q) { return quoteCard({ q: q, s: st }, true); }).join('') +
+      '<h3 class="h-sec">Para hoje</h3><p>' + esc(st.help) + '</p>' +
+      '<div class="pbox"><span class="lbl">Pedido de intercessão</span><p class="prayer">' + esc(st.prayer) + '</p></div>' +
+      '<div class="row"><a class="btn" href="#/santos/' + nx.id + '">Próximo: ' + esc(nx.name) + '</a><a class="btn ghost" href="#/santos">Todos os santos</a></div></article>';
+    bindCopy(app);
   };
 
   routes.leituras = function (parts) {
@@ -395,7 +461,21 @@
     b.setAttribute('aria-pressed', on); $('#player').classList.toggle('on', on);
     b.innerHTML = ic(on ? 'pause' : 'play');
     b.setAttribute('aria-label', on ? 'Pausar música ambiente' : 'Tocar música ambiente');
-    $('#pstate').textContent = on ? 'Tocando · modo dórico' : 'Pausado · toque para ouvir';
+    var tr = A.track();
+    $('#ptitle').textContent = tr.name;
+    $('#pstate').textContent = on ? 'Tocando · ' + tr.desc : 'Pausado · toque para ouvir';
+    renderTracks();
+  }
+  function renderTracks() {
+    var cur = A.track().id;
+    $('#tracks').innerHTML = '<p class="tk-h">Música de fundo</p>' + A.tracks().map(function (t) {
+      return '<button role="menuitemradio" aria-checked="' + (t.id === cur) + '" data-track="' + t.id + '"><strong>' + esc(t.name) + '</strong><small>' + esc(t.desc) + '</small></button>';
+    }).join('') + '<p class="tk-note">Faixas geradas no seu navegador, com melodias de domínio público.</p>';
+    $$('[data-track]').forEach(function (b) { b.onclick = function () { save('track', b.dataset.track); save('music', 'on'); A.setTrack(b.dataset.track); if (!A.isOn()) A.start(); toggleMenu(false); }; });
+  }
+  function toggleMenu(force) {
+    var m = $('#tracks'), open = force === undefined ? m.hidden : force;
+    m.hidden = !open; $('#plist').setAttribute('aria-expanded', open);
   }
   function syncLang() {
     $$('[data-lang]').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.lang === lang); });
@@ -410,7 +490,12 @@
     syncLang();
     var vol = load('vol', 70); $('#vol').value = vol; A.setVolume(vol / 100);
     $('#vol').oninput = function () { save('vol', +this.value); A.setVolume(this.value / 100); };
+    var tk = load('track', null); if (tk) A.setTrack(tk);
     A.onchange(syncMusic); syncMusic(); syncTheme();
+    $('#plist').onclick = function (e) { e.stopPropagation(); toggleMenu(); };
+    $('#pnext').onclick = function (e) { e.stopPropagation(); A.next(); save('track', A.track().id); save('music', 'on'); if (!A.isOn()) A.start(); };
+    document.addEventListener('click', function (e) { if (!e.target.closest('#player')) toggleMenu(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') toggleMenu(false); });
     $('#music').onclick = function (e) { e.stopPropagation(); save('music', A.isOn() ? 'off' : 'on'); A.toggle(); };
     $('#theme').onclick = function () {
       var t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';

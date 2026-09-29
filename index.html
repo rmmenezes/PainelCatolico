@@ -43,8 +43,10 @@
 <div class="player" id="player">
   <button class="play" id="music" aria-pressed="false" aria-label="Tocar música ambiente"></button>
   <div class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-  <div class="ptxt"><strong>Canto gregoriano</strong><span id="pstate">Toque para ouvir</span></div>
+  <button class="ptxt" id="plist" aria-haspopup="menu" aria-expanded="false" aria-controls="tracks" title="Escolher música"><strong id="ptitle">Canto gregoriano</strong><span id="pstate">Toque para ouvir</span></button>
+  <button class="icon-btn pbtn" id="pnext" aria-label="Próxima música" title="Próxima música"><svg class="ic" viewBox="0 0 24 24"><path d="M5 5l9 7-9 7zM18 5v14"/></svg></button>
   <input id="vol" type="range" min="0" max="100" value="70" aria-label="Volume da música">
+  <div class="tracks" id="tracks" role="menu" hidden></div>
 </div>
 
 <nav class="bnav" aria-label="Navegação"></nav>
@@ -68,6 +70,8 @@
 
 <script src="src/data.js"></script>
 <script src="src/articles.js"></script>
+<script src="src/saints.js"></script>
+<script src="src/playlist.js"></script>
 <script src="src/art.js"></script>
 <script src="src/audio.js"></script>
 <script src="src/app.js"></script>

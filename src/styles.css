@@ -41,7 +41,7 @@ svg.art{display:block;width:100%;height:100%}
 
 /* ===== Navegação inferior (celular) ===== */
 .bnav{position:fixed;bottom:0;left:0;right:0;z-index:30;display:flex;justify-content:space-around;background:var(--card);border-top:1px solid var(--line);padding:6px 0 max(6px,env(safe-area-inset-bottom));box-shadow:0 -6px 20px #11153a10}
-.bnav a{display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;color:var(--muted);font:500 .68rem var(--sans);min-width:60px;padding:4px}
+.bnav a{display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;color:var(--muted);font:500 .64rem var(--sans);min-width:0;flex:1;padding:4px 0}
 .bnav a svg{width:22px;height:22px}
 .bnav a[aria-current=page]{color:var(--gold)}
 
@@ -221,3 +221,65 @@ textarea{width:100%;min-height:130px;font:inherit;padding:14px;border-radius:14p
 }
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 .article .verse{font-size:1.6rem;margin:1em 0}
+
+/* ===== Player: lista de faixas ===== */
+.ptxt{background:none;border:0;color:inherit;text-align:left;cursor:pointer;padding:0;flex:1}
+.ptxt strong::after{content:' ▾';font-size:.75em;color:#d9b45f}
+.pbtn{width:34px;height:34px;flex:none}
+.tracks{position:absolute;bottom:calc(100% + 10px);left:0;right:0;background:#141939;border:1px solid #ffffff1f;border-radius:18px;padding:8px;box-shadow:0 20px 50px #0008;max-height:60vh;overflow:auto}
+.tracks[hidden]{display:none}
+.tk-h{font:600 .7rem var(--sans);letter-spacing:.12em;text-transform:uppercase;color:#d9b45f;margin:8px 10px}
+.tk-note{font-size:.72rem;color:#9a98b8;margin:8px 10px 4px}
+.tracks button{display:flex;flex-direction:column;align-items:flex-start;width:100%;background:none;border:0;color:#efeadb;padding:10px 12px 10px 34px;border-radius:12px;cursor:pointer;text-align:left;position:relative}
+.tracks button:hover{background:#ffffff0f}
+.tracks button strong{font:600 1.05rem var(--serif)}
+.tracks button small{font-size:.76rem;color:#b9b7d2}
+.tracks button[aria-checked=true]{background:#d9b45f1f}
+.tracks button[aria-checked=true]::before{content:'';position:absolute;left:13px;top:50%;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:#d9b45f;box-shadow:0 0 0 3px #d9b45f44}
+@media(min-width:960px){.player{min-width:400px}.tracks{left:auto;width:340px}}
+
+/* ===== Santos ===== */
+.sgrid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+.scard{display:flex;gap:16px;align-items:flex-start;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);transition:transform .2s,box-shadow .2s,border-color .2s}
+.scard:hover{transform:translateY(-3px);box-shadow:var(--shadow-h);border-color:var(--gold)}
+.s-medal{width:66px;height:66px;flex:none;filter:drop-shadow(0 6px 14px #0003)}
+.s-txt{display:flex;flex-direction:column;gap:3px;min-width:0}
+.s-txt strong{font:600 1.35rem/1.15 var(--serif)}
+.s-txt small{font-size:.78rem;color:var(--muted)}
+.s-txt em{font:italic 500 1.05rem/1.45 var(--serif);color:var(--ink);margin-top:6px;opacity:.85}
+.saints-home{display:grid;gap:18px}
+.scol{display:grid;gap:12px}
+.qwall{columns:1;column-gap:18px}
+.qwall .qcard{break-inside:avoid;margin:0 0 18px}
+.qcard{position:relative;margin:0 0 16px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:26px 24px 18px;box-shadow:var(--shadow);overflow:hidden}
+.qcard::before{content:'“';position:absolute;top:-28px;right:14px;font:700 9rem/1 var(--serif);color:var(--gold);opacity:.14;pointer-events:none}
+.qcard blockquote{margin:0;font:italic 500 1.35rem/1.45 var(--serif);color:var(--ink)}
+.qcard.big{background:linear-gradient(150deg,#1c2256,#0b0e22);color:#f7f0e0;border-color:#ffffff14}
+.qcard.big blockquote{font-size:clamp(1.45rem,2.6vw,1.9rem);color:#fbf6e8}
+.qcard.big .q-sec{color:#e6c677}
+.qcard.big figcaption strong{color:#f7f0e0}.qcard.big figcaption small{color:#b9b7d2}
+.qcard.big .icon-btn{color:#efeadb;border-color:#ffffff30}
+.q-sec{font:italic 500 1rem/1.4 var(--serif);color:var(--gold);margin:10px 0 0}
+.qcard figcaption{display:flex;align-items:center;gap:10px;margin-top:18px;padding-top:14px;border-top:1px solid #8883}
+.q-who{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;flex:1;min-width:0}
+.q-medal{width:40px;height:40px;flex:none}
+.q-who strong{display:block;font:600 1.08rem var(--serif);color:var(--ink)}
+.q-who small{display:block;font-size:.74rem;color:var(--muted)}
+.q-copy{width:34px;height:34px;flex:none;border-color:var(--line);color:var(--muted);background:transparent}
+.q-copy.ok{color:#2e8b57;border-color:#2e8b57}
+.sbanner .in{padding-bottom:36px}
+.sb-row{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.sb-medal{width:110px;height:110px;flex:none;filter:drop-shadow(0 10px 30px #d9b45f44)}
+.sbanner .tag{text-decoration:none;background:#ffffff1a;color:#f3e2ad}
+.h-sec{font-size:1.8rem;margin:34px 0 8px;display:flex;align-items:center;gap:12px}
+.h-sec::after{content:'';flex:1;height:1px;background:var(--line)}
+@media(min-width:720px){.qwall{columns:2}}
+@media(min-width:960px){.saints-home{grid-template-columns:1.1fr 1fr}.qwall{columns:3}}
+#frases{scroll-margin-top:80px}
+.qcard>*{position:relative}
+.qcard .q-bg{position:absolute;inset:0;opacity:.35;pointer-events:none}
+.qcard .q-bg svg{width:100%;height:100%}
+.saints-home .qcard{margin:0;display:flex;flex-direction:column;justify-content:center;min-height:320px}
+.saints-home .qcard figcaption{margin-top:auto}
+.saints-home .qcard blockquote{margin-top:auto}
+.article .pbox .prayer{font-size:1.24rem;line-height:1.7}

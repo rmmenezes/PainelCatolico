@@ -9,11 +9,9 @@
 <meta property="og:title" content="Paz em Oração">
 <meta property="og:description" content="Oração católica e cuidado da saúde mental: orações em latim, práticas guiadas e leituras para a ansiedade.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2311153a'/%3E%3Cpath d='M16 6v20M9 12h14' stroke='%23d9b45f' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="fonts/fonts.css">
 <link rel="stylesheet" href="src/styles.css">
-<script>try{var t=localStorage.getItem('theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.dataset.theme=t}catch(e){}</script>
+<script>(function(){var h=document.documentElement,g=function(k){try{return localStorage.getItem(k)}catch(e){return null}};var t=g('theme');if(!t||t==='auto')t=matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';h.dataset.theme=t;h.dataset.font=g('font')||'classico';h.dataset.fs=g('fs')||'m'})()</script>
 </head>
 <body>
 <a class="skip" href="#app">Ir para o conteúdo</a>
@@ -33,13 +31,15 @@
       </div>
       <button class="icon-btn" id="langc" title="Idioma das orações" aria-label="Trocar idioma das orações"></button>
       <a class="me-btn" id="me" href="#/perfil"></a>
-      <button class="icon-btn" id="theme" title="Alternar tema" aria-label="Alternar tema claro e escuro"></button>
+      <button class="icon-btn aa" id="appear" title="Aparência: fonte, tamanho e tema" aria-label="Aparência: fonte, tamanho do texto e tema" aria-haspopup="dialog" aria-expanded="false">Aa</button>
       <a class="sos" href="#/ajuda"><span class="sos-full">Preciso de ajuda</span><span class="sos-short">SOS</span></a>
     </div>
   </div>
 </header>
 
 <main id="app" tabindex="-1"></main>
+
+<div class="appear" id="apanel" role="dialog" aria-label="Aparência" hidden></div>
 
 <div class="player" id="player">
   <button class="play" id="music" aria-pressed="false" aria-label="Tocar música ambiente"></button>

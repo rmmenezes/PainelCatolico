@@ -2,15 +2,22 @@
   --bg:#f7f3ea;--bg2:#efe8d8;--card:#fffdf8;--ink:#1d1f36;--muted:#62647a;--line:#e6dfcd;
   --navy:#11153a;--navy2:#1c2256;--accent:#34449a;--accent-ink:#fff;--gold:#b8892b;--gold-l:#d9b45f;--gold-soft:#f4e9cc;--wine:#8a2a3b;--danger:#b3261e;
   --shadow:0 1px 2px #11153a10,0 10px 30px #11153a12;--shadow-h:0 2px 4px #11153a14,0 18px 40px #11153a22;--r:18px;
-  --serif:'Cormorant Garamond',Georgia,'Times New Roman',serif;--sans:Inter,system-ui,-apple-system,'Segoe UI',sans-serif;
+  --serif:'Cormorant Garamond',Georgia,'Times New Roman',serif;--sans:Inter,system-ui,-apple-system,'Segoe UI',sans-serif;--fs:100%;
 }
+/* Estilos de fonte (escolhidos em Aparência) */
+:root[data-font=tradicional]{--serif:'EB Garamond',Georgia,serif;--sans:'Source Sans 3',system-ui,sans-serif}
+:root[data-font=moderno]{--serif:'Playfair Display',Georgia,serif;--sans:'DM Sans',system-ui,sans-serif}
+:root[data-font=suave]{--serif:Lora,Georgia,serif;--sans:Nunito,system-ui,sans-serif}
+:root[data-font=legivel]{--serif:'Atkinson Hyperlegible',Verdana,sans-serif;--sans:'Atkinson Hyperlegible',Verdana,sans-serif}
+:root[data-fs=p]{--fs:93.75%}:root[data-fs=g]{--fs:112.5%}:root[data-fs=gg]{--fs:125%}
 :root[data-theme=dark]{
   --bg:#0b0e22;--bg2:#12163a;--card:#141939;--ink:#eeecf6;--muted:#a8aac4;--line:#252b58;
   --accent:#a3b0f5;--accent-ink:#0b0e22;--gold:#e0bd68;--gold-soft:#2a2744;--danger:#ff8f86;
   --shadow:0 1px 2px #0007,0 10px 30px #0005;--shadow-h:0 2px 4px #0008,0 18px 40px #0007;
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.65 var(--sans);-webkit-font-smoothing:antialiased;padding-bottom:150px;overflow-x:hidden}
+html{font-size:var(--fs)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 1rem/1.65 var(--sans);-webkit-font-smoothing:antialiased;padding-bottom:150px;overflow-x:hidden}
 .skip{position:absolute;left:-999px}.skip:focus{left:8px;top:8px;background:var(--card);padding:8px 12px;z-index:99;border-radius:8px}
 h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.1;margin:0;letter-spacing:.003em}
 h2{font-size:clamp(2rem,4.6vw,2.9rem)}h3{font-size:1.45rem}
@@ -434,3 +441,27 @@ button.pcheck{cursor:pointer}
 .lbox figcaption a{color:#e6c677}
 .lbox button{position:absolute;background:#ffffff1a;color:#fff;border:0;border-radius:50%;width:44px;height:44px;font-size:1.4rem;cursor:pointer}
 .lb-x{top:14px;right:14px}.lb-p{left:12px;top:50%}.lb-n{right:12px;top:50%}
+
+/* ===== Aparência ===== */
+.icon-btn.aa{font:700 .95rem var(--serif);letter-spacing:.02em}
+.appear{position:fixed;z-index:80;top:66px;right:16px;width:min(400px,calc(100% - 32px));max-height:calc(100vh - 90px);overflow:auto;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:20px;box-shadow:0 24px 60px #0005;padding:18px}
+.appear[hidden]{display:none}
+.ap-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.ap-head h3{font-size:1.4rem}
+.ap-x{width:34px;height:34px;border-color:var(--line);color:var(--muted);background:transparent}
+.ap-lbl{display:block;font:600 .7rem var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin:16px 0 8px}
+.fopts{display:grid;gap:8px}
+.fopt{display:block;text-align:left;width:100%;background:var(--bg);border:1.5px solid var(--line);border-radius:14px;padding:11px 14px;cursor:pointer;color:var(--ink)}
+.fopt:hover{border-color:var(--gold)}
+.fopt[aria-checked=true]{border-color:var(--gold);background:var(--gold-soft)}
+.fopt .fn{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.fopt .fn b{font-size:1.25rem;font-weight:600}
+.fopt .fn small{font-size:.74rem;color:var(--muted)}
+.fopt .fs{display:block;font-style:italic;font-size:1.02rem;margin-top:2px}
+.fopt .fd{display:block;font-size:.8rem;color:var(--muted);margin-top:3px}
+.segs{display:flex;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.segs button{flex:1;border:0;background:var(--bg);color:var(--ink);padding:10px 6px;cursor:pointer;font:600 .85rem var(--sans)}
+.segs button+button{border-left:1px solid var(--line)}
+.segs button[aria-pressed=true]{background:var(--navy);color:#f3e2ad}
+:root[data-theme=dark] .segs button[aria-pressed=true]{background:var(--gold);color:#1a1608}
+@media(max-width:420px){.top-in{gap:6px;padding:10px 12px}.tools{gap:5px}.brand{gap:7px}.brand span{font-size:1.08rem}.brand-mark{width:28px;height:28px}.icon-btn{width:34px;height:34px}.me-btn{padding:0 2px;height:34px}.sos{padding:7px 9px}}

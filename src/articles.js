@@ -110,5 +110,70 @@ window.ARTICLES = [
       'Se você está pensando em se machucar ou em tirar a própria vida, isso é uma urgência: ligue agora para o CVV (188) ou o SAMU (192), ou vá a um pronto-socorro. Não guarde isso sozinho.'
     ],
     prayer: 'Senhor, agradeço por todos que cuidam da saúde de corpo e alma. Dá-me humildade para pedir ajuda e paciência para o processo. Abençoa os profissionais que me acompanham. Amém.'
+  },
+  {
+    id: 'depressao-noite-escura', tag: 'Esclarecimento', minutes: 5,
+    title: 'Depressão e “noite escura”: qual a diferença?',
+    lead: 'Nem toda escuridão é espiritual. Como reconhecer quando é hora de buscar tratamento.',
+    verse: { pt: 'Por que estás abatida, ó minha alma, e te perturbas dentro de mim? Espera em Deus.', la: 'Quare tristis es, anima mea, et quare conturbas me? Spera in Deo.', ref: 'Sl 42,6' },
+    body: [
+      'São João da Cruz descreveu a “noite escura”: períodos em que a oração fica árida e Deus parece ausente, mas a pessoa continua, no fundo, buscando-O, cumprindo seus deveres e desejando o bem. É uma purificação da fé.',
+      'A depressão é outra coisa: uma doença que afeta o humor, o sono, o apetite, a energia, a concentração e a capacidade de sentir prazer. Pode vir com culpa excessiva, sensação de inutilidade e pensamentos de morte. Ela não é escolha, nem castigo, nem falta de fé.',
+      'As duas podem acontecer ao mesmo tempo, e só um bom acompanhamento ajuda a discernir. Um sinal importante: se a tristeza vem acompanhada de mudanças no corpo (sono, apetite, energia) e dura mais de duas semanas, procure um médico ou psicólogo. Tratar a depressão não atrapalha a vida espiritual; muitas vezes a devolve.',
+      'Se surgirem pensamentos de tirar a própria vida, isso é urgência: ligue 188 (CVV) ou 192 (SAMU), ou vá a um pronto-socorro. Você merece cuidado agora.'
+    ],
+    prayer: 'Senhor, quando minha alma estiver abatida, dá-me forças para pedir ajuda e coragem para aceitar tratamento. Mesmo sem sentir, eu espero em Ti. Amém.'
+  },
+  {
+    id: 'luto', tag: 'Luto', minutes: 5,
+    title: 'Quando alguém que amamos parte',
+    lead: 'O luto é o preço do amor. A fé não o apaga, mas o atravessa com esperança.',
+    verse: { pt: 'Eu sou a ressurreição e a vida. Quem crê em mim, ainda que morra, viverá.', la: 'Ego sum resurrectio et vita: qui credit in me, etiam si mortuus fuerit, vivet.', ref: 'Jo 11,25' },
+    body: [
+      'Diante do túmulo de Lázaro, “Jesus chorou” (Jo 11,35). Ele sabia que o ressuscitaria, e mesmo assim chorou. Chorar não é falta de fé; é amor que não encontra mais para onde ir.',
+      'O luto não segue uma ordem certinha. Há dias de choque, de raiva, de culpa (“eu poderia ter feito mais”), de saudade que dói no corpo, e dias de alguma paz. Tudo isso é normal. Não se compare com o tempo dos outros.',
+      'Algumas ajudas: fale sobre a pessoa, conte histórias, olhe fotos quando se sentir pronto. Mande celebrar uma Missa pela alma dela: a comunhão dos santos nos mantém unidos. Cuide do básico: comer, dormir, sair ao sol. Aceite a companhia de quem se oferece.',
+      'Se, depois de muitos meses, a dor continuar impedindo a vida de seguir (sem conseguir trabalhar, cuidar de si, sentir qualquer alegria), procure ajuda profissional. Existem grupos de apoio ao luto em muitas paróquias e serviços de saúde.'
+    ],
+    prayer: 'Dai-lhe, Senhor, o descanso eterno, e brilhe para ele a vossa luz. E a mim, que fico, dai consolo e esperança até o dia do reencontro. Amém.'
+  },
+  {
+    id: 'solidao', tag: 'Solidão', minutes: 4,
+    title: 'Sozinho, mas não abandonado',
+    lead: 'A solidão dói. Pequenos passos para sair do isolamento, com a ajuda de Deus e das pessoas.',
+    verse: { pt: 'Ainda que meu pai e minha mãe me abandonem, o Senhor me acolherá.', la: 'Quoniam pater meus et mater mea dereliquerunt me; Dominus autem assumpsit me.', ref: 'Sl 27,10' },
+    body: [
+      'Há uma solidão escolhida, que é fecunda: o silêncio da oração, o retiro. E há uma solidão que machuca: sentir que ninguém se importa, que não há com quem falar. Essa segunda merece atenção, porque o isolamento prolongado afeta a saúde do corpo e da mente.',
+      'Deus nos criou para a comunhão. “Não é bom que o homem esteja só” (Gn 2,18). Buscar pessoas não é desconfiar de Deus: é colaborar com o plano dele.',
+      'Comece pequeno: uma mensagem para alguém de quem você gosta, uma Missa num horário em que você possa ficar para conversar depois, um grupo de oração, a pastoral da sua paróquia, um trabalho voluntário. Servir alguém costuma ser o caminho mais rápido para deixar de se sentir sozinho.',
+      'E, nas horas em que não houver ninguém, lembre-se: Jesus também conheceu o abandono no Getsêmani. Você pode falar com ele exatamente como está.'
+    ],
+    prayer: 'Senhor, Tu que conheceste a solidão do horto, fica comigo. Coloca no meu caminho pessoas boas e dá-me coragem de dar o primeiro passo. Amém.'
+  },
+  {
+    id: 'cuidar-de-quem-sofre', tag: 'Família', minutes: 4,
+    title: 'Como cuidar de quem sofre de ansiedade ou depressão',
+    lead: 'Para familiares e amigos: o que ajuda, o que atrapalha e como cuidar também de si.',
+    verse: { pt: 'Carregai o peso uns dos outros, e assim cumprireis a lei de Cristo.', la: 'Alter alterius onera portate, et sic adimplebitis legem Christi.', ref: 'Gl 6,2' },
+    body: [
+      '<strong>O que ajuda:</strong> escutar sem pressa e sem julgar; perguntar “como posso te ajudar hoje?”; oferecer ajudas concretas (acompanhar numa consulta, fazer uma refeição, resolver uma tarefa); lembrar a pessoa de que ela é amada; rezar por ela e, se ela quiser, com ela.',
+      '<strong>O que atrapalha:</strong> frases como “isso é falta de Deus”, “é só pensar positivo”, “tem gente em situação pior”, “você não tem motivo para estar assim”. Mesmo ditas com carinho, fazem a pessoa se sentir culpada e incompreendida.',
+      '<strong>Sinais de alerta:</strong> falar em morrer ou em ser um peso, despedir-se, doar objetos, isolar-se de repente. Nesses casos, pergunte diretamente se ela pensa em se machucar (perguntar não induz), não a deixe sozinha e busque ajuda: CVV 188, SAMU 192.',
+      '<strong>Cuide de você também:</strong> quem cuida se cansa. Descanse, peça ajuda a outras pessoas, procure apoio para si. Você é um Cireneu, não um salvador: a cruz é carregada a várias mãos.'
+    ],
+    prayer: 'Senhor, dá-me paciência, delicadeza e sabedoria para cuidar de quem amo. Sustenta-me quando eu me cansar e cuida de nós dois. Amém.'
+  },
+  {
+    id: 'via-sacra-de-quem-sofre', tag: 'Práticas', minutes: 3,
+    title: 'A Via Sacra de quem sofre',
+    lead: 'Por que rezar o caminho da cruz pode consolar quem atravessa a dor.',
+    verse: { pt: 'Ele tomou sobre si as nossas dores.', la: 'Vere languores nostros ipse tulit, et dolores nostros ipse portavit.', ref: 'Is 53,4' },
+    body: [
+      'A Via Sacra nasceu das peregrinações a Jerusalém: os fiéis queriam refazer os passos de Jesus. Os franciscanos a difundiram pelo mundo, e hoje as 14 estações estão em quase todas as igrejas.',
+      'Para quem sofre, ela tem algo único: mostra um Deus que cai, que é ajudado, que chora, que é humilhado e que se sente abandonado. Nada do que vivemos é estranho a ele.',
+      'Você não precisa rezar as 14 estações de uma vez. Num dia difícil, escolha uma que fale com o seu momento: a queda, o Cireneu, o encontro com a Mãe. Fique com ela alguns minutos.',
+      'Neste app, você pode rezar a Via Sacra passo a passo e conhecer as grandes obras de arte que retratam cada estação.'
+    ],
+    prayer: 'Nós vos adoramos, ó Cristo, e vos bendizemos, porque pela vossa santa cruz remistes o mundo. Amém.'
   }
 ];

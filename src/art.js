@@ -167,6 +167,40 @@ window.SACRED = (function () {
     }
   };
 
+  // Estações da Via Sacra: cena noturna com um símbolo dourado por estação.
+  var ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII', 'XIV'];
+  function crossAt(x, y, h, rot, g) {
+    var w = h * 0.62, b = h * 0.09;
+    return '<g transform="translate(' + x + ' ' + y + ') rotate(' + rot + ')" fill="' + g + '"><rect x="' + (-b / 2) + '" y="' + (-h / 2) + '" width="' + b + '" height="' + h + '" rx="2"/><rect x="' + (-w / 2) + '" y="' + (-h / 2 + h * 0.22) + '" width="' + w + '" height="' + b + '" rx="2"/></g>';
+  }
+  var SYM = {
+    basin: function (g) { return '<ellipse cx="200" cy="165" rx="62" ry="14" fill="' + g + '"/><path d="M140 165Q150 200 200 202Q250 200 260 165Z" fill="' + g + '" opacity=".85"/><path d="M226 70q20 0 22 18l-6 30q24 4 20 20l-8 2q0-12-14-12l-8 22h-28l4-60q2-20 18-20z" fill="' + g + '"/><path d="M218 138q-2 10 0 18M205 142q-2 8 0 14" stroke="#9fc3ff" stroke-width="3" stroke-linecap="round" opacity=".7"/>'; },
+    cross: function (g) { return crossAt(205, 130, 150, -22, g) + '<path d="M130 208q70-12 150 0" stroke="' + g + '" stroke-width="2" opacity=".5" fill="none"/>'; },
+    fall: function (g, k) { var d = ''; for (var i = 0; i < k; i++) d += '<circle cx="' + (200 - (k - 1) * 9 + i * 18) + '" cy="72" r="5" fill="' + g + '"/>'; return crossAt(200, 175, 150, 84, g) + '<path d="M110 196q30-8 40 0M250 196q30-8 40 0" stroke="' + g + '" stroke-width="2" opacity=".45" fill="none"/>' + d; },
+    heart: function (g) { return '<path d="M200 200C160 176 138 150 146 124C154 102 184 100 200 122C216 100 246 102 254 124C262 150 240 176 200 200Z" fill="#8a2a3b" stroke="' + g + '" stroke-width="3"/><path d="M130 88L262 196" stroke="' + g + '" stroke-width="6" stroke-linecap="round"/><path d="M122 80l22 4-4 12z" fill="' + g + '"/><path d="M186 104l-4-18M200 100v-22M214 104l4-18" stroke="' + g + '" stroke-width="3" stroke-linecap="round"/>'; },
+    hands: function (g) {
+      var hand = function (x, y, r) { return '<g transform="translate(' + x + ' ' + y + ') rotate(' + r + ')" fill="' + g + '"><rect x="-13" y="-6" width="26" height="30" rx="10"/><rect x="-12" y="-26" width="6" height="24" rx="3"/><rect x="-5" y="-30" width="6" height="28" rx="3"/><rect x="2" y="-28" width="6" height="26" rx="3"/><rect x="9" y="-22" width="5" height="20" rx="2.5"/></g>'; };
+      return crossAt(200, 132, 150, -18, g) + hand(158, 118, -30) + hand(248, 150, 20);
+    },
+    veil: function (g) { return '<path d="M120 70h160v120q-20-12-40 0t-40 0-40 0-40 0z" fill="' + C.cream + '" stroke="' + g + '" stroke-width="3"/><g stroke="#8a6a3a" stroke-width="2.4" fill="none" opacity=".75"><path d="M178 112q8-5 16 0M206 112q8-5 16 0"/><path d="M200 116v22M190 150q10 6 20 0"/><path d="M168 96q32-26 64 0"/><path d="M170 100q-6 40 10 70M230 100q6 40-10 70"/></g>'; },
+    tears: function (g) { var t = function (x, y, k) { return '<path d="M' + x + ' ' + y + 'c' + 16 * k + ' ' + 24 * k + ' ' + 22 * k + ' ' + 34 * k + ' ' + 0 + ' ' + 48 * k + 'c-' + 22 * k + '-' + 14 * k + '-' + 16 * k + '-' + 24 * k + ' 0-' + 48 * k + 'z" fill="' + g + '"/>'; }; return t(150, 100, 1.1) + t(200, 78, 1.4) + t(250, 104, 1); },
+    tunic: function (g) { return '<path d="M168 70l-50 28 14 26 24-12v92h88v-92l24 12 14-26-50-28q-8 16-32 16t-32-16z" fill="#8a2a3b" stroke="' + g + '" stroke-width="3"/><g fill="' + g + '"><rect x="270" y="172" width="30" height="30" rx="4" transform="rotate(12 285 187)"/><rect x="100" y="178" width="26" height="26" rx="4" transform="rotate(-10 113 191)"/></g><g fill="' + C.navy + '"><circle cx="279" cy="182" r="3"/><circle cx="291" cy="193" r="3"/><circle cx="113" cy="191" r="3"/></g>'; },
+    nails: function (g) { var nail = function (x, y, r) { return '<g transform="translate(' + x + ' ' + y + ') rotate(' + r + ')" fill="' + g + '"><rect x="-12" y="-4" width="24" height="7" rx="2"/><path d="M-4 3h8l-4 70z"/></g>'; }; return nail(160, 96, -8) + nail(200, 86, 0) + nail(240, 96, 8) + '<g transform="rotate(-28 250 190)" fill="' + g + '"><rect x="200" y="182" width="110" height="12" rx="4"/><rect x="296" y="164" width="22" height="48" rx="4"/></g>'; },
+    death: function (g) { return '<circle cx="300" cy="62" r="26" fill="#0a0d22" stroke="' + g + '" stroke-width="3"/><path d="M0 214q200-70 400 0v26H0z" fill="#07091a"/>' + crossAt(200, 112, 150, 0, g) + crossAt(128, 150, 90, 0, g) + crossAt(272, 150, 90, 0, g); },
+    pieta: function (g) { var sp = ''; for (var i = 0; i < 16; i++) { var a = i / 16 * Math.PI * 2, x = 200 + Math.cos(a) * 64, y = 120 + Math.sin(a) * 26; sp += '<path d="M' + x.toFixed(1) + ' ' + y.toFixed(1) + 'l' + (Math.cos(a + 0.9) * 12).toFixed(1) + ' ' + (Math.sin(a + 0.9) * 10 - 4).toFixed(1) + '" stroke="' + g + '" stroke-width="2.5" stroke-linecap="round"/>'; } return '<ellipse cx="200" cy="120" rx="64" ry="26" fill="none" stroke="' + g + '" stroke-width="7"/><ellipse cx="200" cy="120" rx="64" ry="26" fill="none" stroke="#5a3b1c" stroke-width="3" stroke-dasharray="6 7"/>' + sp + '<path d="M110 200q90-40 180 0" stroke="' + C.cream + '" stroke-width="10" fill="none" opacity=".8" stroke-linecap="round"/>'; },
+    tomb: function (g) { return '<path d="M80 222V150q0-70 70-70h40q70 0 70 70v72z" fill="#1b1f44" stroke="' + g + '" stroke-width="3"/><path d="M130 222v-50q0-32 40-32t40 32v50z" fill="#f3e2ad" opacity=".85"/><circle cx="292" cy="186" r="38" fill="#2a2f5c" stroke="' + g + '" stroke-width="3"/><circle cx="292" cy="186" r="26" fill="none" stroke="' + g + '" stroke-width="1" opacity=".5"/>'; }
+  };
+  function station(n, sym) {
+    n = n; var i = ++n0, g = 'url(#gd' + i + ')', fn = { fall1: function (x) { return SYM.fall(x, 1); }, fall2: function (x) { return SYM.fall(x, 2); }, fall3: function (x) { return SYM.fall(x, 3); } }[sym] || SYM[sym];
+    var s = base('s' + i, '#2a1430', '#0a0b22', null, 200, 120) + '<circle cx="200" cy="120" r="140" fill="url(#gls' + i + ')" opacity=".6"/>' + stars(22, n * 7 + 1, 120);
+    s = s.replace('id="gds' + i + '"', 'id="gd' + i + '"');
+    s += '<path d="M0 222q200-26 400 0v18H0z" fill="#07081a"/>';
+    s += fn(g);
+    s += '<text x="22" y="40" font-family="Cormorant Garamond,Georgia,serif" font-size="30" font-weight="700" fill="#f3e2ad" opacity=".9">' + ROMAN[n] + '</text>';
+    return svg(s, 'Estação ' + n);
+  }
+  var n0 = 1000;
+
   // Medalhão de santo: iniciais sob auréola dourada.
   function medal(name, c) {
     n++; var i = n, ini = name.replace(/^(Santa|Santo|São|Beato)\s+/, '').split(/\s+/).filter(function (w) { return w.length > 2 && w[0] === w[0].toUpperCase(); }).slice(0, 2).map(function (w) { return w[0]; }).join('');
@@ -181,6 +215,7 @@ window.SACRED = (function () {
 
   return {
     medal: medal,
+    station: station,
     draw: function (kind) { n++; return (draw[kind] || draw.halo)(n); },
     ornament: '<svg class="orn" viewBox="0 0 240 20" aria-hidden="true"><path d="M0 10H96M144 10H240" stroke="currentColor" stroke-width="1"/><path d="M120 2V18M113 8H127" stroke="currentColor" stroke-width="1.6"/><circle cx="104" cy="10" r="2" fill="currentColor"/><circle cx="136" cy="10" r="2" fill="currentColor"/></svg>'
   };

@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  var D = window.DATA, ARTS = window.ARTICLES, SAINTS = window.SAINTS, A = window.Ambient, app = document.getElementById('app');
+  var D = window.DATA, ARTS = window.ARTICLES, SAINTS = window.SAINTS, VS = window.VIASACRA, A = window.Ambient, app = document.getElementById('app');
 
   /* ---------- utilidades ---------- */
   function load(k, def) { try { var v = JSON.parse(localStorage.getItem(k)); return v === null ? def : v; } catch (e) { return def; } }
@@ -35,6 +35,8 @@
     list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
     next: '<path d="M5 5l9 7-9 7zM18 5v14"/>',
     copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>',
+    cross: '<path d="M12 2v20M6 8h12"/>',
+    ext: '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
     tap: '<path d="M9 11V5a2 2 0 0 1 4 0v6M13 9a2 2 0 0 1 4 0v3a6 6 0 0 1-6 6h-1a5 5 0 0 1-4-2l-2-3a2 2 0 0 1 3-2l1 1"/>'
   };
   function ic(n) { return '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">' + (ICONS[n] || '') + '</svg>'; }
@@ -86,7 +88,7 @@
   }
 
   /* ---------- telas ---------- */
-  var NAV = [['', 'Início', 'home'], ['oracoes', 'Orações', 'book'], ['praticas', 'Práticas', 'heart'], ['santos', 'Santos', 'saint'], ['leituras', 'Leituras', 'scroll'], ['diario', 'Diário', 'pen']];
+  var NAV = [['', 'Início', 'home'], ['oracoes', 'Orações', 'book'], ['praticas', 'Práticas', 'heart'], ['viasacra', 'Via Sacra', 'cross', true], ['santos', 'Santos', 'saint'], ['leituras', 'Leituras', 'scroll'], ['diario', 'Diário', 'pen']];
 
   var PRACTICES = [
     { id: 'terco', art: 'rosary', icon: 'beads', title: 'Santo Terço guiado', min: '20 min', desc: 'Reze o terço passo a passo, com os mistérios do dia e as orações em português e latim.' },
@@ -95,10 +97,12 @@
     { id: 'lectio', art: 'book', icon: 'book', title: 'Lectio Divina', min: '10 min', desc: 'Leia, medite, reze e contemple uma passagem da Escritura, em português e latim.' },
     { id: 'silencio', art: 'candle', icon: 'timer', title: 'Silêncio diante de Deus', min: '3–10 min', desc: 'Um tempo de quietude com sino suave no início e no fim.' },
     { id: 'jaculatoria', art: 'heart', icon: 'tap', title: 'Oração do coração', min: 'livre', desc: 'Repita uma jaculatória com um toque a cada vez. Um contador simples, sem pressa.' },
+    { id: 'viasacra', art: 'glory', icon: 'saint', title: 'Via Sacra guiada', min: '30 min', desc: 'As 14 estações com meditação para quem sofre, oração, Stabat Mater e obras de arte de cada estação.' },
+    { id: 'misericordia', art: 'heart', icon: 'beads', title: 'Terço da Misericórdia', min: '10 min', desc: 'A oração ensinada a Santa Faustina, conta por conta: “Jesus, eu confio em Vós”.' },
     { id: 'exame', art: 'moon', icon: 'moonstar', title: 'Exame do dia', min: '8 min', desc: 'Um exame de fim de dia: gratidão, revisão sem julgamento, perdão e confiança.' }
   ];
 
-  var ART_OF = { 'kit-crise': 'dove', 'preocupacao-e-confianca': 'lily', 'ansiedade-e-fe': 'candle', 'mente-que-nao-para': 'rosary', 'noites-em-claro': 'moon', 'culpa-e-escrupulos': 'heart', 'santos-e-angustia': 'halo', 'fe-e-terapia': 'book' };
+  var ART_OF = { 'depressao-noite-escura': 'moon', 'luto': 'candle', 'solidao': 'lily', 'cuidar-de-quem-sofre': 'heart', 'via-sacra-de-quem-sofre': 'glory', 'kit-crise': 'dove', 'preocupacao-e-confianca': 'lily', 'ansiedade-e-fe': 'candle', 'mente-que-nao-para': 'rosary', 'noites-em-claro': 'moon', 'culpa-e-escrupulos': 'heart', 'santos-e-angustia': 'halo', 'fe-e-terapia': 'book' };
   function pcard(href, art, badge, title, desc, go) {
     return '<a class="pcard" href="' + href + '"><div class="cover">' + SACRED.draw(art) + (badge ? '<span class="badge">' + esc(badge) + '</span>' : '') + '</div>' +
       '<div class="txt"><h3>' + esc(title) + '</h3><p>' + esc(desc) + '</p><span class="go">' + esc(go || 'Abrir') + ' →</span></div></a>';
@@ -165,6 +169,10 @@
       '<section class="blk"><div class="sec-head"><div><span class="eyebrow">Práticas</span><h2>Para acalmar agora</h2><p>Exercícios curtos de oração para o corpo e a mente.</p></div><a class="more" href="#/praticas">Ver todas →</a></div>' +
       '<div class="grid">' + feat.map(practiceCard).join('') + '</div></section>' +
 
+      '<section class="blk"><div class="band vs-band"><div class="bg">' + SACRED.station(12, 'death') + '</div><div class="in">' +
+      '<span class="eyebrow">Quaresma e sextas-feiras</span><h2 style="color:#fbf6e8;margin:.2em 0">Via Sacra</h2><p style="color:#d5d3e6;max-width:48ch">As 14 estações com meditações para quem atravessa a dor, e um guia das grandes obras de arte e dos lugares onde rezar e fotografar o caminho da cruz.</p>' +
+      '<div class="row" style="margin-top:18px"><a class="btn gold" href="#/praticas/viasacra">Rezar a Via Sacra</a><a class="btn ghost" href="#/viasacra">Guia de arte e lugares</a></div></div></div></section>' +
+
       '<section class="blk"><div class="sec-head"><div><span class="eyebrow">Os santos na tribulação</span><h2>Palavra dos santos</h2><p>Eles também conheceram o medo, a doença e a escuridão, e nos deixaram conselhos.</p></div><a class="more" href="#/santos">Ver todos os santos →</a></div>' +
       '<div class="saints-home">' + quoteCard(allQuotes()[dayIndex() % allQuotes().length], 'feature') + '<div class="scol">' + [0, 1, 2].map(function (k) { return saintCard(SAINTS[(dayIndex() * 3 + k) % SAINTS.length]); }).join('') + '</div></div></section>' +
 
@@ -202,6 +210,41 @@
       '<div class="wrap" style="margin-top:28px"><div class="chips"><a class="chip" href="#/oracoes" aria-current="' + !f + '">Todas</a>' +
       D.categories.map(function (c) { return '<a class="chip" href="#/oracoes/' + encodeURIComponent(c) + '" aria-current="' + (f === c) + '">' + c + '</a>'; }).join('') + '</div>' +
       list.map(function (p, i) { return prayerCard(p, list.length === 1 || (f && i === 0)); }).join('') + '</div>';
+  };
+
+  /* ---------- Via Sacra ---------- */
+  function commons(q) { return 'https://commons.wikimedia.org/w/index.php?search=' + encodeURIComponent(q) + '&title=Special:MediaSearch&type=image'; }
+  function vr() { var v = lang === 'la' ? VS.vr.la : VS.vr.pt; return '<p class="vr"><strong>V.</strong> ' + esc(v[0]) + '<br><strong>R.</strong> ' + esc(v[1]) + '</p>' + (lang === 'both' ? '<p class="vr" lang="la"><strong>V.</strong> ' + esc(VS.vr.la[0]) + '<br><strong>R.</strong> ' + esc(VS.vr.la[1]) + '</p>' : ''); }
+  function workCard(w) {
+    return '<div class="work"><div><strong>' + esc(w.t) + '</strong><span class="meta" style="text-transform:none;letter-spacing:0">' + esc(w.a) + ' · ' + esc(w.y) + '</span><small>' + esc(w.p) + '</small><p>' + esc(w.look) + '</p></div>' +
+      '<a class="btn ghost sm" href="' + commons(w.a + ' ' + w.t) + '" target="_blank" rel="noopener">Ver imagem ' + ic('ext') + '</a></div>';
+  }
+  function stationBody(st, compact) {
+    var sb = VS.stabat[(st.n - 1) % VS.stabat.length];
+    return vr() + '<p class="verse" style="font-size:1.25rem">' + esc(st.med) + '<cite>' + esc(st.ref) + '</cite></p>' +
+      '<div class="pbox"><span class="lbl">Oração</span><p class="prayer">' + esc(st.pray) + '</p><p class="note" style="margin:.4em 0 0">Pai Nosso, Ave Maria, Glória ao Pai.</p></div>' +
+      (compact ? '' : '') + '<div class="stabat">' + body({ pt: sb.pt, la: sb.la }) + '<span class="note">Stabat Mater</span></div>';
+  }
+  routes.viasacra = function (parts) {
+    var st = parts[1] && VS.stations.filter(function (x) { return String(x.n) === parts[1]; })[0];
+    if (parts[1] === 'rezar') { location.replace('#/praticas/viasacra'); return; }
+    if (!st) {
+      app.innerHTML = banner('glory', 'Via Sacra', 'O caminho da cruz', 'Rezar as 14 estações, conhecer as grandes obras de arte que as retratam e os lugares onde a Via Sacra é rezada ao ar livre.') +
+        '<div class="wrap"><section class="blk" style="margin-top:32px"><div class="row"><a class="btn gold lg" href="#/praticas/viasacra">Rezar a Via Sacra agora</a><a class="btn ghost lg" href="#/leituras/via-sacra-de-quem-sofre">Por que rezar a Via Sacra</a></div></section>' +
+        '<section class="blk"><div class="sec-head"><div><span class="eyebrow">Estações</span><h2>As 14 estações e suas obras</h2><p>Toque numa estação para a meditação e o guia de pinturas e esculturas.</p></div></div><div class="grid">' +
+        VS.stations.map(function (x) { return '<a class="pcard" href="#/viasacra/' + x.n + '"><div class="cover">' + SACRED.station(x.n, x.sym) + '</div><div class="txt"><span class="meta">' + x.n + 'ª estação</span><h3>' + esc(x.title) + '</h3><p>' + esc(x.works.map(function (w) { return w.a; }).join(' · ')) + '</p><span class="go">Meditar e ver obras →</span></div></a>'; }).join('') + '</div></section>' +
+        '<section class="blk"><div class="grid two"><div class="card"><span class="eyebrow">Visio Divina</span><h3 style="margin:.3em 0 .6em">Rezar diante de uma obra de arte</h3><ol class="steps">' + VS.visio.map(function (v) { return '<li><strong>' + esc(v.t) + '.</strong> ' + esc(v.d) + '</li>'; }).join('') + '</ol></div>' +
+        '<div class="card"><span class="eyebrow">Fotografia</span><h3 style="margin:.3em 0 .6em">Fotografar a Via Sacra com respeito</h3><ul class="steps">' + VS.photoTips.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul></div></div></section>' +
+        '<section class="blk"><div class="sec-head"><div><span class="eyebrow">Lugares</span><h2>Onde rezar e fotografar</h2><p>Vias Sacras célebres no Brasil e no mundo. Os links abrem fotografias de licença livre no Wikimedia Commons.</p></div></div><div class="grid">' +
+        VS.places.map(function (pl) { return '<div class="card place"><span class="meta">' + esc(pl.where) + '</span><h3>' + esc(pl.name) + '</h3><p>' + esc(pl.desc) + '</p><a class="btn ghost sm" href="' + commons(pl.q) + '" target="_blank" rel="noopener">Ver fotografias ' + ic('ext') + '</a></div>'; }).join('') + '</div></section></div>';
+      return;
+    }
+    var prev = VS.stations[st.n - 2], next = VS.stations[st.n];
+    app.innerHTML = '<header class="pbanner"><div class="bg" style="left:0">' + SACRED.station(st.n, st.sym) + '</div><div class="in"><a class="crumb" href="#/viasacra">← Via Sacra</a><br><span class="eyebrow">' + st.n + 'ª estação</span><h2>' + esc(st.title) + '</h2></div></header>' +
+      '<article class="article" style="margin-top:28px">' + stationBody(st) +
+      '<h3 class="h-sec">Na arte</h3>' + st.works.map(workCard).join('') +
+      '<p class="note">Os botões abrem uma busca de imagens de licença livre no Wikimedia Commons.</p>' +
+      '<div class="row" style="margin-top:24px">' + (prev ? '<a class="btn ghost" href="#/viasacra/' + prev.n + '">← ' + prev.n + 'ª estação</a>' : '') + (next ? '<a class="btn" href="#/viasacra/' + next.n + '">' + next.n + 'ª estação →</a>' : '<a class="btn" href="#/viasacra">Concluir</a>') + '</div></article>';
   };
 
   routes.santos = function (parts) {
@@ -430,6 +473,44 @@
     render();
   };
 
+  // Via Sacra guiada
+  PR.viasacra = function (el) {
+    var steps = [{ html: '<div class="stage"><div class="step-n">✝</div><h3>Início</h3>' + body(pid('sinal-cruz')) + '<p>Faça o sinal da cruz e ofereça esta Via Sacra por alguém que sofre, ou pelo seu próprio coração cansado.</p><p class="note">Se preferir, reze apenas algumas estações. Em cada uma, é costume fazer uma genuflexão ou uma pequena inclinação.</p></div>' }].concat(
+      VS.stations.map(function (st) {
+        return { html: '<div class="stage"><div class="st-art">' + SACRED.station(st.n, st.sym) + '</div><span class="meta">' + st.n + 'ª estação</span><h3 style="margin:.2em 0 .6em">' + esc(st.title) + '</h3><div style="text-align:left">' + stationBody(st) + '</div><a class="more" href="#/viasacra/' + st.n + '">Ver as obras de arte desta estação →</a></div>' };
+      }),
+      [{ html: '<div class="stage"><h3>Conclusão</h3><p>Pelas intenções do Santo Padre: Pai Nosso, Ave Maria, Glória ao Pai.</p>' + prayerCard(pid('anima-christi'), true) + '</div>' }]);
+    stepper(el, steps, { endLabel: 'Concluir', onEnd: function () { el.innerHTML = doneCard('Via Sacra concluída. Que a cruz de Cristo seja luz na sua cruz.'); } });
+  };
+
+  // Terço da Misericórdia
+  var mercy = { i: 0 };
+  PR.misericordia = function (el) {
+    var E = 'Eterno Pai, eu Vos ofereço o Corpo e Sangue, Alma e Divindade de Vosso diletíssimo Filho, Nosso Senhor Jesus Cristo, em expiação dos nossos pecados e dos do mundo inteiro.';
+    var P = 'Pela Sua dolorosa Paixão, tende misericórdia de nós e do mundo inteiro.';
+    var S = 'Deus Santo, Deus Forte, Deus Imortal, tende piedade de nós e do mundo inteiro.';
+    var steps = [{ label: 'Sinal da Cruz', p: pid('sinal-cruz') }, { label: 'Oração inicial (opcional)', p: { pt: 'Ó Sangue e Água que jorrastes do Coração de Jesus como fonte de misericórdia para nós, eu confio em Vós!' } },
+      { label: 'Pai Nosso', p: pid('pai-nosso') }, { label: 'Ave Maria', p: pid('ave-maria') }, { label: 'Creio', p: pid('credo') }];
+    for (var d = 1; d <= 5; d++) {
+      steps.push({ label: 'Conta grande', dec: d, p: { pt: E } });
+      for (var k = 1; k <= 10; k++) steps.push({ label: 'Conta pequena', dec: d, bead: k, p: { pt: P } });
+    }
+    for (k = 1; k <= 3; k++) steps.push({ label: 'Encerramento (' + k + '/3)', p: { pt: S } });
+    steps.push({ label: 'Jaculatória final', p: pid('jac-confio') });
+    function render() {
+      var i = Math.min(mercy.i, steps.length - 1), s = steps[i], beads = '';
+      if (s.dec) { beads = '<div class="beads" aria-hidden="true">'; for (var k = 1; k <= 10; k++) beads += '<i class="' + (s.bead && k < s.bead ? 'on' : '') + (s.bead === k ? ' cur' : '') + '"></i>'; beads += '</div>'; }
+      el.innerHTML = '<div class="stage"><div class="bar"><i style="width:' + ((i + 1) / steps.length * 100) + '%"></i></div>' +
+        (s.dec ? '<p class="meta">' + s.dec + 'ª dezena</p>' + beads : '<p class="meta">' + (i < 5 ? 'Orações iniciais' : 'Encerramento') + '</p>') +
+        '<div class="card" style="text-align:left"><span class="lbl">' + esc(s.label) + (s.bead ? ' · ' + s.bead + '/10' : '') + '</span>' + body(s.p) + '</div>' +
+        '<div class="row" style="justify-content:center"><button class="btn ghost" id="pv"' + (i === 0 ? ' disabled' : '') + '>Anterior</button><button class="btn lg" id="nx">' + (i === steps.length - 1 ? 'Concluir' : 'Próxima') + '</button></div>' +
+        '<p class="note">Passo ' + (i + 1) + ' de ' + steps.length + '. Tradicionalmente rezado às 15h, a Hora da Misericórdia.</p></div>';
+      $('#pv').onclick = function () { mercy.i = i - 1; render(); };
+      $('#nx').onclick = function () { if (i === steps.length - 1) { mercy.i = 0; el.innerHTML = doneCard('Jesus, eu confio em Vós.'); } else { mercy.i = i + 1; render(); } };
+    }
+    render();
+  };
+
   // Exame do dia
   PR.exame = function (el) {
     var steps = D.examen.map(function (e, k) {
@@ -446,7 +527,7 @@
   /* ---------- navegação e cabeçalho ---------- */
   function buildNav() {
     $('.dnav').innerHTML = NAV.map(function (n) { return '<a href="#/' + n[0] + '" data-r="' + n[0] + '">' + n[1] + '</a>'; }).join('');
-    $('.bnav').innerHTML = NAV.map(function (n) { return '<a href="#/' + n[0] + '" data-r="' + n[0] + '">' + ic(n[2]) + '<span>' + n[1] + '</span></a>'; }).join('');
+    $('.bnav').innerHTML = NAV.filter(function (n) { return !n[3]; }).map(function (n) { return '<a href="#/' + n[0] + '" data-r="' + n[0] + '">' + ic(n[2]) + '<span>' + n[1] + '</span></a>'; }).join('');
   }
   function route() {
     clearTimers();
@@ -468,9 +549,11 @@
   }
   function renderTracks() {
     var cur = A.track().id;
-    $('#tracks').innerHTML = '<p class="tk-h">Música de fundo</p>' + A.tracks().map(function (t) {
-      return '<button role="menuitemradio" aria-checked="' + (t.id === cur) + '" data-track="' + t.id + '"><strong>' + esc(t.name) + '</strong><small>' + esc(t.desc) + '</small></button>';
-    }).join('') + '<p class="tk-note">Faixas geradas no seu navegador, com melodias de domínio público.</p>';
+    var last = '';
+    $('#tracks').innerHTML = A.tracks().map(function (t) {
+      var h = t.group !== last ? '<p class="tk-h">' + esc(t.group) + '</p>' : ''; last = t.group;
+      return h + '<button role="menuitemradio" aria-checked="' + (t.id === cur) + '" data-track="' + t.id + '"><strong>' + esc(t.name) + '</strong><small>' + esc(t.desc) + '</small></button>';
+    }).join('') + '<p class="tk-note">Faixas geradas no seu navegador: melodias de domínio público e improvisos em estilos tradicionais.</p>';
     $$('[data-track]').forEach(function (b) { b.onclick = function () { save('track', b.dataset.track); save('music', 'on'); A.setTrack(b.dataset.track); if (!A.isOn()) A.start(); toggleMenu(false); }; });
   }
   function toggleMenu(force) {

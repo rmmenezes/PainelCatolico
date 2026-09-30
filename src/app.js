@@ -811,6 +811,7 @@
     var tr = A.track();
     $('#ptitle').textContent = tr.name;
     $('#pstate').textContent = on ? 'Tocando · ' + tr.desc : 'Pausado · toque para ouvir';
+    var tl = $('#ptext'); if (tl) { tl.hidden = !tr.text; if (tr.text) tl.href = '#/oracao/' + tr.text; }
     renderTracks();
   }
   function renderTracks() {
@@ -818,8 +819,9 @@
     var last = '';
     $('#tracks').innerHTML = A.tracks().map(function (t) {
       var h = t.group !== last ? '<p class="tk-h">' + esc(t.group) + '</p>' : ''; last = t.group;
-      return h + '<button role="menuitemradio" aria-checked="' + (t.id === cur) + '" data-track="' + t.id + '"><strong>' + esc(t.name) + '</strong><small>' + esc(t.desc) + '</small></button>';
-    }).join('') + '<p class="tk-note">Faixas geradas no seu navegador: melodias de domínio público e improvisos em estilos tradicionais.</p>';
+      return h + '<div class="tk-row"><button role="menuitemradio" aria-checked="' + (t.id === cur) + '" data-track="' + t.id + '"><strong>' + esc(t.name) + '</strong><small>' + esc(t.desc) + '</small></button>' +
+        (t.text ? '<a class="tk-text" href="#/oracao/' + t.text + '" title="Ler o texto">texto</a>' : '') + '</div>';
+    }).join('') + '<p class="tk-note">Faixas geradas no seu navegador: melodias de domínio público e improvisos em estilos tradicionais. A salmodia é instrumental, no estilo gregoriano; use “texto” para rezar acompanhando.</p>';
     $$('[data-track]').forEach(function (b) { b.onclick = function () { save('track', b.dataset.track); save('music', 'on'); A.setTrack(b.dataset.track); if (!A.isOn()) A.start(); toggleMenu(false); }; });
   }
   function toggleMenu(force) {

@@ -4,7 +4,7 @@ Plataforma web de oração católica e apoio à saúde mental (pt-BR). Sem depen
 
 ## Recursos
 - **Orações em português e latim**: alternador PT / LA / PT·LA (lado a lado) no topo. Pai Nosso, Ave Maria, Credo, Salve Rainha, Memorare, Anima Christi, Completas e outras, além de orações originais para ansiedade, pânico, tristeza e culpa.
-- **Música de fundo** (14 faixas geradas no navegador, em 4 grupos): Sacro (gregoriano, vésperas, órgão, harpa, sinos do Ângelus), Brasil (bendito do sertão, viola de romaria, sanfona de novena), Clássicos (Cânon de Pachelbel, Noite Feliz, violoncelos, piano) e Natureza (flauta, chuva). Cada faixa toca num canal próprio, que é cortado ao trocar.
+- **Música de fundo** (18 faixas geradas no navegador, em 5 grupos): Sacro (gregoriano, vésperas, órgão, harpa, sinos do Ângelus), Liturgia das Horas (Invitatório · Sl 94, Laudes · Sl 62, Magnificat, Completas · Sl 90, em salmodia de estilo gregoriano com antífona, coros alternados e doxologia, cada uma com o texto em PT/LA), Brasil (bendito do sertão, viola de romaria, sanfona de novena), Clássicos (Cânon de Pachelbel, Noite Feliz, violoncelos, piano) e Natureza (flauta, chuva). Cada faixa toca num canal próprio, que é cortado ao trocar.
 - **Gravações próprias**: coloque MP3 em `musicas/` e registre em `src/playlist.js` (ex.: cantos tradicionais gravados pela sua paróquia); eles entram na lista do player.
 - **Cantos tradicionais brasileiros** (letras): A treze de maio, Queremos Deus, Com minha Mãe estarei, Tão sublime sacramento.
 - **Práticas**: Santo Terço guiado (mistérios do dia), respiração com oração (4-4-6, 4-7-8, quadrada), aterramento 5-4-3-2-1, Lectio Divina, silêncio com sino, contador de jaculatórias e exame do dia.

@@ -16,9 +16,20 @@ Plataforma web de oração católica e apoio à saúde mental (pt-BR). Sem depen
 - **Ajuda imediata**: CVV 188, SAMU 192, Bombeiros 193, CAPS/UBS.
 - Tema claro/escuro, responsivo, acessível por teclado.
 
+## Meu caminho (perfil e desempenho)
+- **Perfil local** com nome e PIN opcional (vários perfis por aparelho). Sem servidor: os dados ficam no navegador. O PIN separa pessoas que dividem o aparelho; não é criptografia.
+- **Plano diário** (modelos prontos ou itens próprios) que se marca sozinho ao concluir práticas, rezar orações, fazer o devocional ou ler textos.
+- **Desempenho**: sequência de dias, melhor sequência, minutos e dias no mês, calendário de 12 semanas, minutos por dia (14 dias, com tabela) e atividades recentes.
+- **Backup** em arquivo JSON para levar o perfil a outro aparelho.
+- **Devocional diário**: versículo, reflexão, gesto concreto e oração, com os dias anteriores.
+
+## Imagens da Via Sacra
+As obras e os lugares aparecem dentro do app, buscados pelo navegador do visitante na API pública do Wikimedia Commons (licenças livres, com autor e licença na legenda; cache de 30 dias). Sem conexão, o app mostra as ilustrações próprias. Obras ainda protegidas por direito autoral (Portinari, Dalí) não são exibidas.
+
 ## Estrutura
 - `index.html`: casca da página
 - `src/data.js`: orações, mistérios, práticas · `src/articles.js`: leituras · `src/saints.js`: santos · `src/viasacra.js`: Via Sacra
+- `src/progress.js`: perfis, plano e registro · `src/devocional.js`: devocionais · `src/commons.js`: imagens do acervo
 - `src/playlist.js` + `musicas/`: gravações opcionais
 - `src/art.js`: ilustrações sacras em SVG (vitral, terço, pomba, velas, Bíblia, Sagrado Coração, lírios, noite)
 - `src/audio.js`: música ambiente · `src/app.js`: telas · `src/styles.css`: visual

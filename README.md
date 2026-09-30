@@ -23,6 +23,9 @@ Plataforma web de oração católica e apoio à saúde mental (pt-BR). Sem depen
 - **Backup** em arquivo JSON para levar o perfil a outro aparelho.
 - **Devocional diário**: versículo, reflexão, gesto concreto e oração, com os dias anteriores.
 
+## Aparência
+Botão **Aa** no topo: 5 estilos de fonte (Clássico, Tradicional, Moderno, Suave e Leitura fácil, com Atkinson Hyperlegible para baixa visão), 4 tamanhos de texto e tema automático, claro ou escuro. As fontes são auto-hospedadas em `fonts/` (licença OFL), sem Google Fonts.
+
 ## Imagens da Via Sacra
 As obras e os lugares aparecem dentro do app, buscados pelo navegador do visitante na API pública do Wikimedia Commons (licenças livres, com autor e licença na legenda; cache de 30 dias). Sem conexão, o app mostra as ilustrações próprias. Obras ainda protegidas por direito autoral (Portinari, Dalí) não são exibidas.
 

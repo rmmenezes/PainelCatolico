@@ -830,7 +830,50 @@
     $$('[data-lang]').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.lang === lang); });
     $('#langc').textContent = { pt: 'PT', la: 'LA', both: 'P·L' }[lang];
   }
-  function syncTheme() { var d = document.documentElement.dataset.theme === 'dark'; $('#theme').innerHTML = ic(d ? 'sun' : 'moon'); }
+  function syncTheme() {}
+  /* ---------- Aparência: estilo de fonte, tamanho do texto e tema ---------- */
+  var FONTS = [
+    { id: 'classico', name: 'Clássico', serif: "'Cormorant Garamond'", sans: 'Inter', note: 'Cormorant Garamond + Inter', desc: 'Elegante, de inspiração renascentista.' },
+    { id: 'tradicional', name: 'Tradicional', serif: "'EB Garamond'", sans: "'Source Sans 3'", note: 'EB Garamond + Source Sans 3', desc: 'Como um missal impresso: sóbrio e fácil de ler.' },
+    { id: 'moderno', name: 'Moderno', serif: "'Playfair Display'", sans: "'DM Sans'", note: 'Playfair Display + DM Sans', desc: 'Contraste marcante e visual contemporâneo.' },
+    { id: 'suave', name: 'Suave', serif: 'Lora', sans: 'Nunito', note: 'Lora + Nunito', desc: 'Arredondada e acolhedora.' },
+    { id: 'legivel', name: 'Leitura fácil', serif: "'Atkinson Hyperlegible'", sans: "'Atkinson Hyperlegible'", note: 'Atkinson Hyperlegible', desc: 'Criada para pessoas com baixa visão: letras bem distintas.' }
+  ];
+  var SIZES = [['p', 'A−', 'Texto menor'], ['m', 'A', 'Texto normal'], ['g', 'A+', 'Texto maior'], ['gg', 'A++', 'Texto muito maior']];
+  var THEMES = [['auto', 'Automático'], ['light', 'Claro'], ['dark', 'Escuro']];
+  function applyTheme() {
+    var t = (function () { try { return localStorage.getItem('theme'); } catch (e) { return null; } })() || 'auto';
+    var eff = t === 'auto' ? (matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light') : t;
+    document.documentElement.dataset.theme = eff;
+  }
+  function setPref(k, v) {
+    var h = document.documentElement;
+    try { localStorage.setItem(k, v); } catch (e) {}
+    if (k === 'font') h.dataset.font = v;
+    if (k === 'fs') h.dataset.fs = v;
+    if (k === 'theme') applyTheme();
+    renderAppearance();
+  }
+  function renderAppearance() {
+    var h = document.documentElement, font = h.dataset.font || 'classico', fs = h.dataset.fs || 'm', th = (function () { try { return localStorage.getItem('theme') || 'auto'; } catch (e) { return 'auto'; } })();
+    $('#apanel').innerHTML = '<div class="ap-head"><h3>Aparência</h3><button class="icon-btn ap-x" id="apx" aria-label="Fechar">✕</button></div>' +
+      '<span class="ap-lbl" id="lf">Estilo da fonte</span><div class="fopts" role="radiogroup" aria-labelledby="lf">' + FONTS.map(function (f) {
+        return '<button class="fopt" role="radio" aria-checked="' + (f.id === font) + '" data-font="' + f.id + '"><span class="fn"><b style="font-family:' + f.serif + ',serif">' + f.name + '</b><small style="font-family:' + f.sans + ',sans-serif">' + f.note + '</small></span>' +
+          '<span class="fs" style="font-family:' + f.serif + ',serif">Pai nosso, que estais nos céus…</span><span class="fd" style="font-family:' + f.sans + ',sans-serif">' + f.desc + '</span></button>';
+      }).join('') + '</div>' +
+      '<span class="ap-lbl">Tamanho do texto</span><div class="segs" role="group" aria-label="Tamanho do texto">' + SIZES.map(function (z) { return '<button data-fs="' + z[0] + '" aria-pressed="' + (z[0] === fs) + '" aria-label="' + z[2] + '">' + z[1] + '</button>'; }).join('') + '</div>' +
+      '<span class="ap-lbl">Tema</span><div class="segs" role="group" aria-label="Tema">' + THEMES.map(function (t) { return '<button data-th="' + t[0] + '" aria-pressed="' + (t[0] === th) + '">' + t[1] + '</button>'; }).join('') + '</div>';
+    $('#apx').onclick = function () { toggleAppearance(false); };
+    $$('#apanel [data-font]').forEach(function (b) { b.onclick = function () { setPref('font', b.dataset.font); }; });
+    $$('#apanel [data-fs]').forEach(function (b) { b.onclick = function () { setPref('fs', b.dataset.fs); }; });
+    $$('#apanel [data-th]').forEach(function (b) { b.onclick = function () { setPref('theme', b.dataset.th); }; });
+  }
+  function toggleAppearance(force) {
+    var p = $('#apanel'), open = force === undefined ? p.hidden : force;
+    if (open) renderAppearance();
+    p.hidden = !open; $('#appear').setAttribute('aria-expanded', open);
+    if (open) { var c = $('#apanel [aria-checked=true]'); if (c) c.focus(); } else if (force === false) $('#appear').focus();
+  }
 
   function init() {
     PG.restore();
@@ -847,10 +890,10 @@
     document.addEventListener('click', function (e) { if (!e.target.closest('#player')) toggleMenu(false); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') toggleMenu(false); });
     $('#music').onclick = function (e) { e.stopPropagation(); save('music', A.isOn() ? 'off' : 'on'); A.toggle(); };
-    $('#theme').onclick = function () {
-      var t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-      document.documentElement.dataset.theme = t; try { localStorage.setItem('theme', t); } catch (e) {} syncTheme();
-    };
+    $('#appear').onclick = function (e) { e.stopPropagation(); toggleAppearance(); };
+    document.addEventListener('click', function (e) { if (e.target.isConnected && !$('#apanel').hidden && !e.target.closest('#apanel, #appear')) toggleAppearance(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('#apanel').hidden) toggleAppearance(false); });
+    try { matchMedia('(prefers-color-scheme:dark)').addEventListener('change', applyTheme); } catch (e) {}
     // Navegadores só liberam áudio após um gesto do usuário: inicia na primeira interação, salvo se o usuário pausou.
     function first(e) {
       if (e.target.closest && e.target.closest('#player')) return;

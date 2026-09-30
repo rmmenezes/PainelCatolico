@@ -465,3 +465,10 @@ button.pcheck{cursor:pointer}
 .segs button[aria-pressed=true]{background:var(--navy);color:#f3e2ad}
 :root[data-theme=dark] .segs button[aria-pressed=true]{background:var(--gold);color:#1a1608}
 @media(max-width:420px){.top-in{gap:6px;padding:10px 12px}.tools{gap:5px}.brand{gap:7px}.brand span{font-size:1.08rem}.brand-mark{width:28px;height:28px}.icon-btn{width:34px;height:34px}.me-btn{padding:0 2px;height:34px}.sos{padding:7px 9px}}
+
+.tk-row{display:flex;align-items:center;gap:4px}
+.tk-row button{flex:1}
+.tk-text{font:600 .72rem var(--sans);color:#d9b45f;text-decoration:none;border:1px solid #d9b45f55;border-radius:99px;padding:4px 10px;margin-right:6px}
+.tk-text:hover{background:#d9b45f22}
+.ptext{color:#efeadb;border-color:#ffffff30;display:grid;place-items:center}
+.ptext[hidden]{display:none}

@@ -193,6 +193,85 @@
     o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.08);
   }
 
+  // Frase cantada: uma voz de coro que muda de nota e de vogal a cada sílaba (imita o texto salmodiado).
+  var VOW = { a: [700, 1220, 2600], e: [450, 1900, 2550], i: [300, 2250, 2900], o: [480, 850, 2450], u: [340, 750, 2400] };
+  function sung(notes, t0, level, pan) {
+    var g = ctx.createGain(), mix = ctx.createGain(), lp = ctx.createBiquadFilter(), dest = g, end = t0;
+    notes.forEach(function (n) { end += n[1]; });
+    lp.type = 'lowpass'; lp.frequency.value = 2800; mix.gain.value = level * 0.5;
+    if (pan && ctx.createStereoPanner) { var pn = ctx.createStereoPanner(); pn.pan.value = pan; g.connect(pn); pn.connect(out); } else g.connect(out);
+    var vib = ctx.createOscillator(), vg = ctx.createGain();
+    vib.frequency.value = 4.6; vg.gain.value = notes[0][0] * 0.0025; vib.connect(vg); vib.start(t0); vib.stop(end + 0.6);
+    var oscs = [-7, 0, 6].map(function (c) { var o = osc('sawtooth', notes[0][0], t0, end + 0.6, mix, 1, c); vg.connect(o.frequency); return o; });
+    var fs = [0, 1, 2].map(function (k) {
+      var bp = ctx.createBiquadFilter(), fg = ctx.createGain();
+      bp.type = 'bandpass'; bp.Q.value = [7, 9, 12][k]; bp.frequency.value = VOW.a[k]; fg.gain.value = [1, 0.5, 0.18][k];
+      mix.connect(bp); bp.connect(fg); fg.connect(lp); return bp;
+    });
+    lp.connect(dest);
+    g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(1, t0 + 0.08);
+    var t = t0;
+    notes.forEach(function (n, k) {
+      oscs.forEach(function (o) { o.frequency.setTargetAtTime(n[0], t, 0.018); });
+      var v = VOW[n[2] || 'a']; fs.forEach(function (bp, j) { bp.frequency.setTargetAtTime(v[j], t, 0.025); });
+      if (k) { g.gain.setTargetAtTime(0.6, t, 0.008); g.gain.setTargetAtTime(1, t + 0.035, 0.025); }
+      t += n[1];
+    });
+    g.gain.setTargetAtTime(0, end - 0.05, 0.12);
+    return end;
+  }
+  // Salmodia em estilo gregoriano: antífona, versículos recitados numa corda (tenor) com cadência
+  // de meio de verso e final, em coros alternados, e doxologia. As melodias são geradas, não transcritas.
+  function psalmody(o) {
+    var S = o.scale.map(f), V = ['a', 'e', 'i', 'o', 'u', 'a', 'e', 'o'], syl = o.syl || 0.24, ant = null;
+    function vow() { return pick(V); }
+    function antiphon() {
+      var i = o.final, notes = [], len = 9 + Math.floor(Math.random() * 4);
+      for (var k = 0; k < len - 1; k++) {
+        var neume = Math.random() < 0.35;
+        notes.push([S[i], neume ? 0.2 : 0.36, vow()]);
+        if (neume) notes.push([S[Math.min(S.length - 1, i + 1)], 0.2, notes[notes.length - 1][2]]);
+        var target = k < len / 2 ? o.tenor : o.final;
+        i = Math.max(0, Math.min(S.length - 1, i + (i < target ? pick([1, 1, 2, -1]) : i > target ? pick([-1, -1, -2, 1]) : pick([-1, 1]))));
+      }
+      notes.push([S[o.final], 1.1, 'a']);
+      return notes;
+    }
+    function verse(first) {
+      var n = [], k;
+      (first || o.intoneAll ? o.inton : []).forEach(function (i) { n.push([S[i], syl * 1.2, vow()]); });
+      for (k = 0; k < 6 + Math.floor(Math.random() * 7); k++) n.push([S[o.tenor], syl, vow()]);
+      o.med.forEach(function (i, j) { n.push([S[i], j === o.med.length - 1 ? syl * 3 : syl * 1.4, vow()]); });
+      n.push([0, 0.55]);
+      for (k = 0; k < 5 + Math.floor(Math.random() * 8); k++) n.push([S[o.tenor], syl, vow()]);
+      o.term.forEach(function (i, j) { n.push([S[i], j === o.term.length - 1 ? syl * 4 : syl * 1.4, j === o.term.length - 1 ? 'a' : vow()]); });
+      return n;
+    }
+    // Canta uma sequência com pausas ([0, segundos]) e devolve o instante final.
+    function sing(seq, t, level, pan) {
+      var buf = [];
+      seq.concat([[0, 0]]).forEach(function (x) {
+        if (x[0]) buf.push(x);
+        else { if (buf.length) t = sung(buf, t, level, pan); buf = []; t += x[1]; }
+      });
+      return t;
+    }
+    drone([S[o.final] / 2], 0.05, 'sine');
+    (function cycle() {
+      ant = antiphon();
+      var t = ctx.currentTime + 0.2, v;
+      t = sing(ant, t, 0.17, 0) + 1.1;
+      for (v = 0; v < o.verses; v++) {
+        t = sing(verse(v === 0), t, 0.15, v % 2 ? 0.35 : -0.35) + 0.9;
+        if (o.refrain && v % o.refrain === o.refrain - 1) t = sing(ant, t, 0.17, 0) + 1.1;
+      }
+      t = sing(verse(false), t, 0.15, -0.35) + 0.9;   // Glória ao Pai…
+      t = sing(verse(false), t, 0.15, 0.35) + 0.9;    // …Como era no princípio
+      t = sing(ant, t, 0.17, 0) + 1.2;
+      later(cycle, t - ctx.currentTime + 5);
+    })();
+  }
+
   /* ---------- geradores ---------- */
   // Canto modal improvisado: movimento por graus conjuntos, atraído pela finalis.
   function chant(scale, droneFreqs, opts) {
@@ -256,6 +335,15 @@
       later(next, n % 12 < 3 ? 2.2 : rnd(4, 9));
     })();
   };
+  // Liturgia das Horas (salmodia em estilo gregoriano)
+  var MODE_F = ['C3', 'D3', 'E3', 'F3', 'G3', 'A3', 'Bb3', 'C4', 'D4', 'E4', 'F4'];
+  var MODE_G = ['D3', 'E3', 'F3', 'G3', 'A3', 'B3', 'C4', 'D4', 'E4', 'F4', 'G4'];
+  var MODE_D = ['C3', 'D3', 'E3', 'F3', 'G3', 'A3', 'Bb3', 'C4', 'D4', 'E4', 'F4'];
+  // Invitatório: a antífona volta depois de cada estrofe, como no início do Ofício.
+  T.invitatorio = function () { psalmody({ scale: MODE_F, final: 3, tenor: 5, inton: [3, 4], med: [4, 5], term: [4, 3, 3], verses: 10, refrain: 2, syl: 0.23 }); };
+  T.laudes = function () { psalmody({ scale: MODE_G, final: 3, tenor: 6, inton: [3, 4], med: [7, 6], term: [5, 6, 4, 3], verses: 8 }); };
+  T.completas = function () { psalmody({ scale: MODE_D, final: 1, tenor: 5, inton: [3, 4], med: [6, 5, 4, 5], term: [4, 3, 2, 1], verses: 8, syl: 0.27 }); };
+  T.magnificat = function () { psalmody({ scale: MODE_D, final: 1, tenor: 3, inton: [1, 2], med: [4, 3], term: [2, 1], verses: 10, intoneAll: true, syl: 0.25 }); };
   // Clássicos de domínio público
   // Cânon em Ré — Johann Pachelbel, séc. XVII: baixo ostinato e linha superior.
   T.canon = function () {
@@ -407,6 +495,10 @@
     { id: 'orgao', group: 'Sacro', name: 'Órgão da catedral', desc: 'Coral lento de órgão de tubos' },
     { id: 'harpa', gain: 1.3, group: 'Sacro', name: 'Harpa dos Salmos', desc: 'Arpejos suaves de harpa' },
     { id: 'angelus', group: 'Sacro', name: 'Sinos do Ângelus', desc: 'Sinos de bronze ao longe' },
+    { id: 'invitatorio', gain: 2.2, group: 'Liturgia das Horas', name: 'Invitatório (Sl 94)', desc: 'Antífona e salmo em coros alternados · abertura do dia', text: 'sl95' },
+    { id: 'laudes', gain: 1.4, group: 'Liturgia das Horas', name: 'Laudes · Salmo 62', desc: 'Salmodia da manhã em estilo gregoriano', text: 'sl63' },
+    { id: 'magnificat', gain: 3.4, group: 'Liturgia das Horas', name: 'Magnificat', desc: 'Cântico de Maria, das Vésperas', text: 'magnificat' },
+    { id: 'completas', gain: 3.4, group: 'Liturgia das Horas', name: 'Completas · Salmo 90', desc: 'Salmodia da noite, mais lenta', text: 'sl91' },
     { id: 'bendito', gain: 1.1, group: 'Brasil', name: 'Bendito do sertão', desc: 'Coro em modo mixolídio, estilo nordestino' },
     { id: 'viola', gain: 3, group: 'Brasil', name: 'Viola de romaria', desc: 'Viola caipira em terças, toada' },
     { id: 'sanfona', gain: 4, group: 'Brasil', name: 'Sanfona de novena', desc: 'Valsa de sanfona, como nas novenas do interior' },

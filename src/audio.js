@@ -496,7 +496,7 @@
     { id: 'harpa', gain: 1.3, group: 'Sacro', name: 'Harpa dos Salmos', desc: 'Arpejos suaves de harpa' },
     { id: 'angelus', group: 'Sacro', name: 'Sinos do Ângelus', desc: 'Sinos de bronze ao longe' },
     { id: 'invitatorio', gain: 2.2, group: 'Liturgia das Horas', name: 'Invitatório (Sl 94)', desc: 'Antífona e salmo em coros alternados · abertura do dia', text: 'sl95' },
-    { id: 'laudes', gain: 1.4, group: 'Liturgia das Horas', name: 'Laudes · Salmo 62', desc: 'Salmodia da manhã em estilo gregoriano', text: 'sl63' },
+    { id: 'laudes', gain: 2.4, group: 'Liturgia das Horas', name: 'Laudes · Salmo 62', desc: 'Salmodia da manhã em estilo gregoriano', text: 'sl63' },
     { id: 'magnificat', gain: 3.4, group: 'Liturgia das Horas', name: 'Magnificat', desc: 'Cântico de Maria, das Vésperas', text: 'magnificat' },
     { id: 'completas', gain: 3.4, group: 'Liturgia das Horas', name: 'Completas · Salmo 90', desc: 'Salmodia da noite, mais lenta', text: 'sl91' },
     { id: 'bendito', gain: 1.1, group: 'Brasil', name: 'Bendito do sertão', desc: 'Coro em modo mixolídio, estilo nordestino' },

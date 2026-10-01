@@ -146,7 +146,7 @@ window.DATA = {
     { id: 'bem', label: 'Bem', glyph: '☀', prayer: 'gloria', tip: 'Agradeça pelo que está bom hoje: a gratidão fortalece a alma e prepara para os dias difíceis.' },
     { id: 'calmo', label: 'Calmo', glyph: '☾', prayer: 'pai-nosso', tip: 'Aproveite a calma para uma oração sem pressa, ou para uma Lectio Divina.' },
     { id: 'ansioso', label: 'Ansioso', glyph: '≋', prayer: 'panico', tip: 'Comece pela respiração com oração; depois, se puder, o exercício 5-4-3-2-1.', act: ['respirar', 'aterramento'] },
-    { id: 'triste', label: 'Triste', glyph: '☂', prayer: 'tristeza', tip: 'Acolha o que sente. Conversar com alguém de confiança ajuda mais do que guardar tudo.', act: ['diario'] },
+    { id: 'triste', label: 'Triste', glyph: '☂', prayer: 'tristeza', tip: 'Acolha o que sente. Conversar com alguém de confiança ajuda mais do que guardar tudo.', act: ['jaculatoria', 'silencio'] },
     { id: 'cansado', label: 'Cansado', glyph: '☁', prayer: 'noite', tip: 'Descanso também é cuidado. Diminua o ritmo e experimente alguns minutos de silêncio.', act: ['silencio'] },
     { id: 'irritado', label: 'Irritado', glyph: '⚡', prayer: 'sao-francisco', tip: 'Respire fundo antes de responder. A paz começa em você.', act: ['respirar'] }
   ],

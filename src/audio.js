@@ -145,6 +145,25 @@
     [-4, 4].forEach(function (c) { vg.connect(osc('sawtooth', freq, t, t + dur + 2, lp, level * 0.4, c).frequency); });
     lp.connect(bp); env(g, t, 0.9, dur, 1.4, 1); bp.connect(g); g.connect(out);
   }
+  // Violino barroco, com vibrato tardio e posição no estéreo.
+  function violin(freq, t, dur, level, pan) {
+    var g = ctx.createGain(), lp = ctx.createBiquadFilter(), hp = ctx.createBiquadFilter(), pk = ctx.createBiquadFilter(), vib = ctx.createOscillator(), vg = ctx.createGain();
+    lp.type = 'lowpass'; lp.frequency.value = 4200; hp.type = 'highpass'; hp.frequency.value = 220; pk.type = 'peaking'; pk.frequency.value = 2600; pk.gain.value = 4;
+    vib.frequency.value = 5.6; vg.gain.setValueAtTime(0, t); vg.gain.linearRampToValueAtTime(freq * 0.004, t + Math.min(0.35, dur));
+    vib.connect(vg); vib.start(t); vib.stop(t + dur + 0.6);
+    [-5, 5].forEach(function (c) { vg.connect(osc('sawtooth', freq, t, t + dur + 0.6, lp, level * 0.35, c).frequency); });
+    lp.connect(hp); hp.connect(pk);
+    env(g, t, Math.min(0.07, dur / 3), dur, 0.25, 1); pk.connect(g);
+    if (pan && ctx.createStereoPanner) { var pn = ctx.createStereoPanner(); pn.pan.value = pan; g.connect(pn); pn.connect(out); } else g.connect(out);
+  }
+  // Cravo: corda pinçada brilhante com registro de oitava.
+  function harpsi(freq, t, level) {
+    var g = ctx.createGain(), lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass'; lp.frequency.setValueAtTime(6000, t); lp.frequency.exponentialRampToValueAtTime(1600, t + 0.7);
+    osc('sawtooth', freq, t, t + 2, lp, level * 0.4); osc('square', freq * 2, t, t + 2, lp, level * 0.12, 3);
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(1, t + 0.003); g.gain.exponentialRampToValueAtTime(0.25, t + 0.25); g.gain.exponentialRampToValueAtTime(0.001, t + 1.6);
+    lp.connect(g); g.connect(out);
+  }
   // Sino de bronze: parciais inarmônicas.
   function bell(freq, t, level) {
     [[0.5, 0.5, 9], [1, 1, 7], [1.2, 0.5, 5], [1.5, 0.35, 4], [2, 0.3, 3.5], [2.74, 0.2, 2.5], [3.76, 0.12, 1.8]].forEach(function (p) {
@@ -191,85 +210,6 @@
     o.frequency.setValueAtTime(fr, t); o.frequency.exponentialRampToValueAtTime(fr * 1.6, t + 0.05);
     g.gain.setValueAtTime(level, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
     o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.08);
-  }
-
-  // Frase cantada: uma voz de coro que muda de nota e de vogal a cada sílaba (imita o texto salmodiado).
-  var VOW = { a: [700, 1220, 2600], e: [450, 1900, 2550], i: [300, 2250, 2900], o: [480, 850, 2450], u: [340, 750, 2400] };
-  function sung(notes, t0, level, pan) {
-    var g = ctx.createGain(), mix = ctx.createGain(), lp = ctx.createBiquadFilter(), dest = g, end = t0;
-    notes.forEach(function (n) { end += n[1]; });
-    lp.type = 'lowpass'; lp.frequency.value = 2800; mix.gain.value = level * 0.5;
-    if (pan && ctx.createStereoPanner) { var pn = ctx.createStereoPanner(); pn.pan.value = pan; g.connect(pn); pn.connect(out); } else g.connect(out);
-    var vib = ctx.createOscillator(), vg = ctx.createGain();
-    vib.frequency.value = 4.6; vg.gain.value = notes[0][0] * 0.0025; vib.connect(vg); vib.start(t0); vib.stop(end + 0.6);
-    var oscs = [-7, 0, 6].map(function (c) { var o = osc('sawtooth', notes[0][0], t0, end + 0.6, mix, 1, c); vg.connect(o.frequency); return o; });
-    var fs = [0, 1, 2].map(function (k) {
-      var bp = ctx.createBiquadFilter(), fg = ctx.createGain();
-      bp.type = 'bandpass'; bp.Q.value = [7, 9, 12][k]; bp.frequency.value = VOW.a[k]; fg.gain.value = [1, 0.5, 0.18][k];
-      mix.connect(bp); bp.connect(fg); fg.connect(lp); return bp;
-    });
-    lp.connect(dest);
-    g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(1, t0 + 0.08);
-    var t = t0;
-    notes.forEach(function (n, k) {
-      oscs.forEach(function (o) { o.frequency.setTargetAtTime(n[0], t, 0.018); });
-      var v = VOW[n[2] || 'a']; fs.forEach(function (bp, j) { bp.frequency.setTargetAtTime(v[j], t, 0.025); });
-      if (k) { g.gain.setTargetAtTime(0.6, t, 0.008); g.gain.setTargetAtTime(1, t + 0.035, 0.025); }
-      t += n[1];
-    });
-    g.gain.setTargetAtTime(0, end - 0.05, 0.12);
-    return end;
-  }
-  // Salmodia em estilo gregoriano: antífona, versículos recitados numa corda (tenor) com cadência
-  // de meio de verso e final, em coros alternados, e doxologia. As melodias são geradas, não transcritas.
-  function psalmody(o) {
-    var S = o.scale.map(f), V = ['a', 'e', 'i', 'o', 'u', 'a', 'e', 'o'], syl = o.syl || 0.24, ant = null;
-    function vow() { return pick(V); }
-    function antiphon() {
-      var i = o.final, notes = [], len = 9 + Math.floor(Math.random() * 4);
-      for (var k = 0; k < len - 1; k++) {
-        var neume = Math.random() < 0.35;
-        notes.push([S[i], neume ? 0.2 : 0.36, vow()]);
-        if (neume) notes.push([S[Math.min(S.length - 1, i + 1)], 0.2, notes[notes.length - 1][2]]);
-        var target = k < len / 2 ? o.tenor : o.final;
-        i = Math.max(0, Math.min(S.length - 1, i + (i < target ? pick([1, 1, 2, -1]) : i > target ? pick([-1, -1, -2, 1]) : pick([-1, 1]))));
-      }
-      notes.push([S[o.final], 1.1, 'a']);
-      return notes;
-    }
-    function verse(first) {
-      var n = [], k;
-      (first || o.intoneAll ? o.inton : []).forEach(function (i) { n.push([S[i], syl * 1.2, vow()]); });
-      for (k = 0; k < 6 + Math.floor(Math.random() * 7); k++) n.push([S[o.tenor], syl, vow()]);
-      o.med.forEach(function (i, j) { n.push([S[i], j === o.med.length - 1 ? syl * 3 : syl * 1.4, vow()]); });
-      n.push([0, 0.55]);
-      for (k = 0; k < 5 + Math.floor(Math.random() * 8); k++) n.push([S[o.tenor], syl, vow()]);
-      o.term.forEach(function (i, j) { n.push([S[i], j === o.term.length - 1 ? syl * 4 : syl * 1.4, j === o.term.length - 1 ? 'a' : vow()]); });
-      return n;
-    }
-    // Canta uma sequência com pausas ([0, segundos]) e devolve o instante final.
-    function sing(seq, t, level, pan) {
-      var buf = [];
-      seq.concat([[0, 0]]).forEach(function (x) {
-        if (x[0]) buf.push(x);
-        else { if (buf.length) t = sung(buf, t, level, pan); buf = []; t += x[1]; }
-      });
-      return t;
-    }
-    drone([S[o.final] / 2], 0.05, 'sine');
-    (function cycle() {
-      ant = antiphon();
-      var t = ctx.currentTime + 0.2, v;
-      t = sing(ant, t, 0.17, 0) + 1.1;
-      for (v = 0; v < o.verses; v++) {
-        t = sing(verse(v === 0), t, 0.15, v % 2 ? 0.35 : -0.35) + 0.9;
-        if (o.refrain && v % o.refrain === o.refrain - 1) t = sing(ant, t, 0.17, 0) + 1.1;
-      }
-      t = sing(verse(false), t, 0.15, -0.35) + 0.9;   // Glória ao Pai…
-      t = sing(verse(false), t, 0.15, 0.35) + 0.9;    // …Como era no princípio
-      t = sing(ant, t, 0.17, 0) + 1.2;
-      later(cycle, t - ctx.currentTime + 5);
-    })();
   }
 
   /* ---------- geradores ---------- */
@@ -335,15 +275,6 @@
       later(next, n % 12 < 3 ? 2.2 : rnd(4, 9));
     })();
   };
-  // Liturgia das Horas (salmodia em estilo gregoriano)
-  var MODE_F = ['C3', 'D3', 'E3', 'F3', 'G3', 'A3', 'Bb3', 'C4', 'D4', 'E4', 'F4'];
-  var MODE_G = ['D3', 'E3', 'F3', 'G3', 'A3', 'B3', 'C4', 'D4', 'E4', 'F4', 'G4'];
-  var MODE_D = ['C3', 'D3', 'E3', 'F3', 'G3', 'A3', 'Bb3', 'C4', 'D4', 'E4', 'F4'];
-  // Invitatório: a antífona volta depois de cada estrofe, como no início do Ofício.
-  T.invitatorio = function () { psalmody({ scale: MODE_F, final: 3, tenor: 5, inton: [3, 4], med: [4, 5], term: [4, 3, 3], verses: 10, refrain: 2, syl: 0.23 }); };
-  T.laudes = function () { psalmody({ scale: MODE_G, final: 3, tenor: 6, inton: [3, 4], med: [7, 6], term: [5, 6, 4, 3], verses: 8 }); };
-  T.completas = function () { psalmody({ scale: MODE_D, final: 1, tenor: 5, inton: [3, 4], med: [6, 5, 4, 5], term: [4, 3, 2, 1], verses: 8, syl: 0.27 }); };
-  T.magnificat = function () { psalmody({ scale: MODE_D, final: 1, tenor: 3, inton: [1, 2], med: [4, 3], term: [2, 1], verses: 10, intoneAll: true, syl: 0.25 }); };
   // Clássicos de domínio público
   // Cânon em Ré — Johann Pachelbel, séc. XVII: baixo ostinato e linha superior.
   T.canon = function () {
@@ -375,6 +306,110 @@
       ['C5', 1], ['G4', 1], ['E4', 1], ['G4', 1.5], ['F4', .5], ['D4', 1], ['C4', 6]];
     var ch = [C, C, C, C, G, G, C, C, F, F, C, C, F, F, C, C, G, G, C, C, C, G, C, C];
     song(mel, ch, 0.62, 3, function (fr, t, d) { celesta(fr, t, 0.2); reed(fr, t, d * 0.95, 0.05); }, function (fr, t, d) { reed(fr, t, d, 0.035); }, 5);
+  };
+  // Prelúdio em Dó maior, BWV 846 — J. S. Bach, 1722 (compassos 1 a 19 e acorde final).
+  T.preludio = function () {
+    var B = [['C4', 'E4', 'G4', 'C5', 'E5'], ['C4', 'D4', 'A4', 'D5', 'F5'], ['B3', 'D4', 'G4', 'D5', 'F5'], ['C4', 'E4', 'G4', 'C5', 'E5'],
+      ['C4', 'E4', 'A4', 'E5', 'A5'], ['C4', 'D4', 'F#4', 'A4', 'D5'], ['B3', 'D4', 'G4', 'D5', 'G5'], ['B3', 'C4', 'E4', 'G4', 'C5'],
+      ['A3', 'C4', 'E4', 'G4', 'C5'], ['D3', 'A3', 'D4', 'F#4', 'C5'], ['G3', 'B3', 'D4', 'G4', 'B4'], ['G3', 'Bb3', 'E4', 'G4', 'C#5'],
+      ['F3', 'A3', 'D4', 'A4', 'D5'], ['F3', 'Ab3', 'D4', 'F4', 'B4'], ['E3', 'G3', 'C4', 'G4', 'C5'], ['E3', 'F3', 'A3', 'C4', 'F4'],
+      ['D3', 'F3', 'A3', 'C4', 'F4'], ['G2', 'D3', 'G3', 'B3', 'F4'], ['C3', 'E3', 'G3', 'C4', 'E4']];
+    var six = 0.17;
+    (function play() {
+      var t0 = ctx.currentTime + 0.1;
+      B.forEach(function (b, k) {
+        var tb = t0 + k * 16 * six, fr = b.map(f);
+        [0, 8].forEach(function (h) {
+          var t = tb + h * six;
+          piano(fr[0], t, 0.16); piano(fr[1], t + six, 0.12);
+          [2, 3, 4, 2, 3, 4].forEach(function (i, j) { piano(fr[i], t + (j + 2) * six, 0.1); });
+        });
+      });
+      var tf = t0 + B.length * 16 * six;
+      ['C2', 'C3', 'G3', 'C4', 'E4'].forEach(function (n, j) { piano(f(n), tf + j * 0.06, 0.13); });
+      later(play, B.length * 16 * six + 6);
+    })();
+  };
+  // La Folia — progressão barroca tradicional, com variações improvisadas (violino e cravo).
+  T.folia = function () {
+    var P = ['Dm', 'A', 'Dm', 'C', 'F', 'C', 'Dm', 'A', 'Dm', 'A', 'Dm', 'C', 'F', 'C', 'A', 'Dm'];
+    var CH = { Dm: ['D3', 'F3', 'A3', 'D4'], A: ['A2', 'E3', 'A3', 'C#4'], C: ['C3', 'E3', 'G3', 'C4'], F: ['F2', 'C3', 'F3', 'A3'] };
+    var TOP = { Dm: ['D5', 'F5', 'A5', 'A4'], A: ['C#5', 'E5', 'A4', 'E4'], C: ['C5', 'E5', 'G5', 'G4'], F: ['C5', 'F5', 'A5', 'A4'] };
+    var beat = 0.62, round = 0;
+    (function play() {
+      var t0 = ctx.currentTime + 0.1, prev = 'D5';
+      P.forEach(function (c, k) {
+        var t = t0 + k * 3 * beat, fr = CH[c];
+        fr.forEach(function (n, j) { harpsi(f(n), t + j * 0.02, j ? 0.07 : 0.12); });
+        if (round % 3 === 0) {
+          // tema: ritmo de sarabanda (semínima, mínima)
+          var a = TOP[c][0], b2 = TOP[c][1]; violin(f(a), t, beat * 0.95, 0.09, -0.2); violin(f(b2), t + beat, beat * 1.9, 0.09, -0.2);
+        } else if (round % 3 === 1) {
+          // variação em colcheias por graus próximos às notas do acorde
+          for (var e = 0; e < 6; e++) { var opts = TOP[c].slice().sort(function (x, y) { return Math.abs(m(x) - m(prev)) - Math.abs(m(y) - m(prev)); }); var n2 = e % 2 ? opts[Math.random() < 0.5 ? 0 : 1] : opts[0]; violin(f(n2), t + e * beat / 2, beat / 2 * 0.9, 0.07, -0.2); prev = n2; }
+        } else {
+          // variação de arpejos no cravo
+          for (var q = 0; q < 12; q++) harpsi(f(fr[q % 4]) * 2, t + q * beat / 4, 0.06);
+          violin(f(TOP[c][0]), t, 3 * beat * 0.95, 0.06, -0.2);
+        }
+      });
+      round++;
+      later(play, P.length * 3 * beat + 1);
+    })();
+  };
+  // Cânon em Sol — cânone original a três violinos sobre o baixo de Pachelbel: cada violino
+  // repete, um ciclo depois, a melodia do anterior.
+  T['canon-sol'] = function () {
+    var bass = ['G2', 'D2', 'E2', 'B1', 'C2', 'G1', 'C2', 'D2'];
+    var CT = [['G4', 'B4', 'D5'], ['F#4', 'A4', 'D5'], ['G4', 'B4', 'E5'], ['F#4', 'B4', 'D5'], ['G4', 'C5', 'E5'], ['G4', 'B4', 'D5'], ['G4', 'C5', 'E5'], ['F#4', 'A4', 'D5']];
+    var RH = [[1, 1], [0.5, 0.5, 1], [0.5, 0.5, 0.5, 0.5], [2], [1.5, 0.5]];
+    var beat = 1.0, mels = [], prev = 'B4';
+    function melody() {
+      var out2 = [];
+      CT.forEach(function (ct) {
+        pick(RH).forEach(function (d, i) {
+          var opts = ct.concat(ct.map(function (n) { return n.replace(/(\d)$/, function (x) { return +x + 1; }); })).filter(function (n) { return m(n) <= m('G5'); });
+          opts.sort(function (x, y) { return Math.abs(m(x) - m(prev)) - Math.abs(m(y) - m(prev)); });
+          var n = i === 0 ? opts[Math.random() < 0.6 ? 0 : 1] : opts[Math.random() < 0.5 ? 0 : 2] || opts[0];
+          out2.push([n, d]); prev = n;
+        });
+      });
+      return out2;
+    }
+    (function play() {
+      var t0 = ctx.currentTime + 0.1;
+      mels.unshift(melody()); if (mels.length > 3) mels.pop();
+      bass.forEach(function (b, k) { cello(f(b) * 2, t0 + k * 2 * beat, 2 * beat * 0.95, 0.1); harpsi(f(b) * 2, t0 + k * 2 * beat, 0.08); });
+      mels.forEach(function (mel, v) {
+        var t = t0;
+        mel.forEach(function (x) { violin(f(x[0]), t, x[1] * beat * 0.95, 0.075, [-0.5, 0.5, 0][v]); t += x[1] * beat; });
+      });
+      later(play, bass.length * 2 * beat);
+    })();
+  };
+  // Pastoral em Fá — siciliana em 12/8 (ritmo pontuado), com flauta, cordas e cravo.
+  T.pastoral = function () {
+    var P = ['F', 'C', 'Dm', 'Am', 'Bb', 'F', 'Bb', 'C'];
+    var CH = { F: ['F3', 'A3', 'C4'], C: ['E3', 'G3', 'C4'], Dm: ['D3', 'F3', 'A3'], Am: ['E3', 'A3', 'C4'], Bb: ['D3', 'F3', 'Bb3'] };
+    var BS = { F: 'F2', C: 'C2', Dm: 'D2', Am: 'A1', Bb: 'Bb1' };
+    var TONES = { F: ['F5', 'A5', 'C5', 'G5'], C: ['E5', 'G5', 'C5', 'D5'], Dm: ['D5', 'F5', 'A5', 'E5'], Am: ['C5', 'E5', 'A4', 'B4'], Bb: ['D5', 'F5', 'Bb4', 'C5'] };
+    var e8 = 0.32, prev = 'A5';
+    (function play() {
+      var t0 = ctx.currentTime + 0.1;
+      P.forEach(function (c, k) {
+        var t = t0 + k * 6 * e8;
+        CH[c].forEach(function (n) { cello(f(n), t, 6 * e8 * 0.95, 0.035); });
+        harpsi(f(BS[c]) * 2, t, 0.1); harpsi(f(BS[c]) * 2, t + 3 * e8, 0.07);
+        [[1.5, 0.5, 1], [1.5, 0.5, 1]].forEach(function (grp, gi) {
+          var tt = t + gi * 3 * e8;
+          grp.forEach(function (d) {
+            var opts = TONES[c].slice().sort(function (x, y) { return Math.abs(m(x) - m(prev)) - Math.abs(m(y) - m(prev)); });
+            var n = opts[Math.random() < 0.55 ? 0 : 1]; flute(f(n), tt, d * e8 * 0.92, 0.1); prev = n; tt += d * e8;
+          });
+        });
+      });
+      later(play, P.length * 6 * e8);
+    })();
   };
   T.violoncelos = function () {
     var CH = [['D2', 'A2', 'F3', 'D4'], ['Bb2', 'F3', 'D4', 'F4'], ['F2', 'C3', 'A3', 'F4'], ['C3', 'G3', 'E4', 'G4'],
@@ -495,14 +530,14 @@
     { id: 'orgao', group: 'Sacro', name: 'Órgão da catedral', desc: 'Coral lento de órgão de tubos' },
     { id: 'harpa', gain: 1.3, group: 'Sacro', name: 'Harpa dos Salmos', desc: 'Arpejos suaves de harpa' },
     { id: 'angelus', group: 'Sacro', name: 'Sinos do Ângelus', desc: 'Sinos de bronze ao longe' },
-    { id: 'invitatorio', gain: 2.2, group: 'Liturgia das Horas', name: 'Invitatório (Sl 94)', desc: 'Antífona e salmo em coros alternados · abertura do dia', text: 'sl95' },
-    { id: 'laudes', gain: 2.4, group: 'Liturgia das Horas', name: 'Laudes · Salmo 62', desc: 'Salmodia da manhã em estilo gregoriano', text: 'sl63' },
-    { id: 'magnificat', gain: 3.4, group: 'Liturgia das Horas', name: 'Magnificat', desc: 'Cântico de Maria, das Vésperas', text: 'magnificat' },
-    { id: 'completas', gain: 3.4, group: 'Liturgia das Horas', name: 'Completas · Salmo 90', desc: 'Salmodia da noite, mais lenta', text: 'sl91' },
     { id: 'bendito', gain: 1.1, group: 'Brasil', name: 'Bendito do sertão', desc: 'Coro em modo mixolídio, estilo nordestino' },
     { id: 'viola', gain: 3, group: 'Brasil', name: 'Viola de romaria', desc: 'Viola caipira em terças, toada' },
     { id: 'sanfona', gain: 4, group: 'Brasil', name: 'Sanfona de novena', desc: 'Valsa de sanfona, como nas novenas do interior' },
     { id: 'canon', gain: 1.3, group: 'Clássicos', name: 'Cânon em Ré', desc: 'Pachelbel, séc. XVII · órgão e harpa' },
+    { id: 'preludio', gain: 1.1, group: 'Clássicos', name: 'Prelúdio em Dó', desc: 'J. S. Bach, 1722 · piano' },
+    { id: 'folia', gain: 5, group: 'Clássicos', name: 'La Folia', desc: 'Progressão barroca com variações · violino e cravo' },
+    { id: 'canon-sol', gain: 2, group: 'Clássicos', name: 'Cânon em Sol', desc: 'Três violinos em cânone sobre o baixo de Pachelbel' },
+    { id: 'pastoral', gain: 1.5, group: 'Clássicos', name: 'Pastoral em Fá', desc: 'Siciliana barroca · flauta, cordas e cravo' },
     { id: 'noite-feliz', gain: 2, group: 'Clássicos', name: 'Noite Feliz', desc: 'Gruber, 1818 · harmônio e celesta' },
     { id: 'violoncelos', gain: 1.7, group: 'Clássicos', name: 'Violoncelos em oração', desc: 'Acordes lentos de cordas' },
     { id: 'piano', gain: 3, group: 'Clássicos', name: 'Piano contemplativo', desc: 'Acordes e notas soltas, sem pressa' },

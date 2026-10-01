@@ -1,0 +1,25 @@
+{
+  "name": "Paz em Oração",
+  "short_name": "Paz em Oração",
+  "description": "Orações católicas em português e latim, práticas para acalmar a mente, Via Sacra, santos e música sacra.",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0d22",
+  "theme_color": "#11153a",
+  "categories": ["lifestyle", "health", "books"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Respirar com oração", "url": "./#/praticas/respirar", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Santo Terço", "url": "./#/praticas/terco", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Via Sacra", "url": "./#/viasacra", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Preciso de ajuda", "url": "./#/ajuda", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

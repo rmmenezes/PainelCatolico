@@ -1,13 +1,10 @@
 (function () {
   'use strict';
-  var DEV = window.DEVOCIONAL, PG = window.Progress, D = window.DATA, ARTS = window.ARTICLES, SAINTS = window.SAINTS, VS = window.VIASACRA, A = window.Ambient, app = document.getElementById('app');
+  var DEV = window.DEVOCIONAL, D = window.DATA, ARTS = window.ARTICLES, SAINTS = window.SAINTS, VS = window.VIASACRA, A = window.Ambient, app = document.getElementById('app');
 
   /* ---------- utilidades ---------- */
   function load(k, def) { try { var v = JSON.parse(localStorage.getItem(k)); return v === null ? def : v; } catch (e) { return def; } }
   function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
-  // Diário e humores ficam no perfil ativo, quando houver; senão, no aparelho.
-  function uload(k, def) { return PG.current ? (PG.current[k] || def) : load(k, def); }
-  function usave(k, v) { if (PG.current) { PG.current[k] = v; PG.save(); } else save(k, v); }
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function $(s, r) { return (r || document).querySelector(s); }
   function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
@@ -40,6 +37,7 @@
     copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>',
     cross: '<path d="M12 2v20M6 8h12"/>',
     ext: '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
+    share: '<path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 6l-4-4-4 4M12 2v13"/>',
     tap: '<path d="M9 11V5a2 2 0 0 1 4 0v6M13 9a2 2 0 0 1 4 0v3a6 6 0 0 1-6 6h-1a5 5 0 0 1-4-2l-2-3a2 2 0 0 1 3-2l1 1"/>'
   };
   function ic(n) { return '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">' + (ICONS[n] || '') + '</svg>'; }
@@ -55,13 +53,9 @@
     return '<div class="bi"><div><span class="lbl">Português</span>' + para(o.pt) + '</div><div lang="la"><span class="lbl">Latina</span>' + para(o.la) + '</div></div>';
   }
   function titleOf(p) { return (lang === 'la' && p.latin) ? p.latin : p.title; }
-  function prayedBtn(p) {
-    var done = PG.current && PG.did(PG.dkey(), 'prayer:' + p.id);
-    return '<div class="row" style="margin-top:10px"><button class="btn ghost sm" data-prayed="' + p.id + '"' + (done ? ' aria-pressed="true"' : '') + '>' + (done ? '✓ Rezada hoje' : 'Rezei') + '</button></div>';
-  }
   function prayerCard(p, open) {
     var sub = (lang === 'both' && p.latin) ? '<span class="sub">' + esc(p.latin) + '</span>' : '';
-    return '<details class="pray"' + (open ? ' open' : '') + '><summary><span class="pray-ic" aria-hidden="true">✝</span><span class="pt">' + esc(titleOf(p)) + sub + '</span><span class="tag">' + esc(p.cat) + '</span></summary><div class="inner">' + body(p) + prayedBtn(p) + '</div></details>';
+    return '<details class="pray"' + (open ? ' open' : '') + '><summary><span class="pray-ic" aria-hidden="true">✝</span><span class="pt">' + esc(titleOf(p)) + sub + '</span><span class="tag">' + esc(p.cat) + '</span></summary><div class="inner">' + body(p) + '<div class="row" style="margin-top:10px">' + Share.btn({ eyebrow: 'Oração', text: lang === 'la' && p.la ? p.la : p.pt, ref: titleOf(p), art: 'candle', slug: p.id }) + '</div></div></details>';
   }
   function setLang(l) {
     lang = l; save('lang', l);
@@ -91,22 +85,12 @@
     }
     render();
   }
-  var curPractice = null;
-  // Registra no perfil a prática em andamento (uma vez por conclusão).
-  function logPractice(minutes) {
-    var c = curPractice; if (!c || c.logged) return '';
-    c.logged = true;
-    if (!PG.current) return '<p class="note">Quer acompanhar sua caminhada? <a href="#/perfil">Crie um perfil</a> para registrar as práticas.</p>';
-    var m = minutes != null ? minutes : Math.max(1, Math.round((Date.now() - c.start) / 60000));
-    PG.log('practice:' + c.id, c.title, m, 'practice'); syncMe();
-    return '<p class="logged">✓ Registrado no seu caminho · ' + m + ' min</p>';
-  }
   function doneCard(msg) {
-    return '<div class="stage"><div class="step-n">✝</div><h3>Amém.</h3><p>' + msg + '</p>' + logPractice() + '<div class="row" style="justify-content:center"><a class="btn" href="#/praticas">Outras práticas</a><a class="btn ghost" href="#/">Início</a></div></div>';
+    return '<div class="stage"><div class="step-n">✝</div><h3>Amém.</h3><p>' + msg + '</p><div class="row" style="justify-content:center"><a class="btn" href="#/praticas">Outras práticas</a><a class="btn ghost" href="#/">Início</a></div></div>';
   }
 
   /* ---------- telas ---------- */
-  var NAV = [['', 'Início', 'home'], ['oracoes', 'Orações', 'book'], ['praticas', 'Práticas', 'heart'], ['viasacra', 'Via Sacra', 'cross', true], ['santos', 'Santos', 'saint'], ['leituras', 'Leituras', 'scroll'], ['diario', 'Diário', 'pen']];
+  var NAV = [['', 'Início', 'home'], ['oracoes', 'Orações', 'book'], ['praticas', 'Práticas', 'heart'], ['viasacra', 'Via Sacra', 'cross', true], ['santos', 'Santos', 'saint'], ['leituras', 'Leituras', 'scroll']];
 
   var PRACTICES = [
     { id: 'terco', art: 'rosary', icon: 'beads', title: 'Santo Terço guiado', min: '20 min', desc: 'Reze o terço passo a passo, com os mistérios do dia e as orações em português e latim.' },
@@ -140,23 +124,12 @@
     else if (q.orig) sec = '<p class="q-sec">' + esc(q.orig) + '</p>';
     return '<figure class="qcard' + (big ? ' big' : '') + '">' + (big === 'feature' ? '<div class="q-bg">' + SACRED.draw('glory') + '</div>' : '') + '<blockquote>“' + esc(quoteText(q)) + '”</blockquote>' + sec +
       '<figcaption><a class="q-who" href="#/santos/' + st.id + '"><span class="q-medal">' + SACRED.medal(st.name, st.colors) + '</span><span><strong>' + esc(st.name) + '</strong><small>' + esc(q.src) + (q.attr ? ' · atribuída' : '') + '</small></span></a>' +
-      '<button class="icon-btn q-copy" data-copy="' + esc('“' + q.pt + '” — ' + st.name) + '" aria-label="Copiar frase" title="Copiar frase">' + ic('copy') + '</button></figcaption></figure>';
+      Share.btn({ eyebrow: st.name, text: quoteText(q), ref: q.src + (q.attr ? ' (atribuída)' : ''), quote: true, art: 'glory', slug: st.id }, '', 'icon-btn q-copy') + '</figcaption></figure>';
   }
   function saintCard(st) {
     return '<a class="scard" href="#/santos/' + st.id + '"><span class="s-medal">' + SACRED.medal(st.name, st.colors) + '</span><span class="s-txt"><strong>' + esc(st.name) + '</strong><small>' + esc(st.dates) + ' · ' + esc(st.title) + '</small>' +
       '<em>“' + esc(st.quotes[0].pt.length > 95 ? st.quotes[0].pt.slice(0, 92).replace(/\s+\S*$/, '') + '…' : st.quotes[0].pt) + '”</em></span></a>';
   }
-  function bindCopy(root) {
-    $$('[data-copy]', root).forEach(function (b) {
-      b.onclick = function (e) {
-        e.preventDefault();
-        var t = b.dataset.copy, done = function () { b.classList.add('ok'); b.title = 'Copiada!'; setTimeout(function () { b.classList.remove('ok'); }, 1500); };
-        if (navigator.share && matchMedia('(pointer:coarse)').matches) navigator.share({ text: t }).catch(function () {});
-        else if (navigator.clipboard) navigator.clipboard.writeText(t).then(done, function () {});
-      };
-    });
-  }
-
   function banner(art, eyebrow, title, desc, crumb) {
     return '<header class="pbanner"><div class="bg">' + SACRED.draw(art) + '</div><div class="in">' + (crumb ? '<a class="crumb" href="' + crumb[0] + '">← ' + crumb[1] + '</a><br>' : '') +
       '<span class="eyebrow">' + esc(eyebrow) + '</span><h2>' + esc(title) + '</h2>' + (desc ? '<p>' + esc(desc) + '</p>' : '') + '</div></header>';
@@ -165,7 +138,7 @@
   var routes = {};
 
   routes[''] = function () {
-    var r = D.reflections[dayIndex() % D.reflections.length], moods = uload('moods', {}), sel = moods[today()];
+    var r = D.reflections[dayIndex() % D.reflections.length], moods = load('moods', {}), sel = moods[today()];
     var nLa = D.prayers.filter(function (p) { return p.la; }).length;
     var feat = ['terco', 'respirar', 'aterramento', 'silencio'].map(function (id) { return PRACTICES.filter(function (x) { return x.id === id; })[0]; });
     feat[0] = Object.assign({}, feat[0], { title: 'Terço de hoje', desc: D.mysteries[todaySet()].name + '. Reze passo a passo, com as contas marcando o ritmo.' });
@@ -178,8 +151,8 @@
       '<div class="stats"><div>' + D.prayers.length + '<span>orações</span></div><div>' + SAINTS.length + '<span>santos</span></div><div>' + nLa + '<span>em latim</span></div><div>' + PRACTICES.length + '<span>práticas guiadas</span></div><div>' + ARTS.length + '<span>leituras</span></div></div>' +
       '</div><div class="hero-art">' + SACRED.draw('window') + '</div></div></section>' +
 
-      '<div class="wrap"><section class="blk">' + todayCard() + '</section><section class="blk">' + devCard(devOfDay()) + '</section><section class="blk"><div class="grid two">' +
-      '<div class="card refl"><div class="refl-art">' + SACRED.draw('lily') + '</div><span class="eyebrow">Reflexão do dia</span><p class="verse">“' + esc(r.verse) + '”<cite>' + esc(r.ref) + '</cite></p><p>' + esc(r.text) + '</p></div>' +
+      '<div class="wrap"><section class="blk">' + devCard(devOfDay()) + '</section>' + installCard() + '<section class="blk"><div class="grid two">' +
+      '<div class="card refl"><div class="refl-art">' + SACRED.draw('lily') + '</div><span class="eyebrow">Reflexão do dia</span><p class="verse">“' + esc(r.verse) + '”<cite>' + esc(r.ref) + '</cite></p><p>' + esc(r.text) + '</p>' + Share.btn({ eyebrow: 'Reflexão do dia', text: r.verse, ref: r.ref, sub: r.text, quote: true, art: 'lily', slug: 'reflexao' }) + '</div>' +
       '<div class="card"><span class="eyebrow">Como você está agora?</span><p class="note" style="margin:.3em 0 0">Escolha e receba uma oração e uma prática.</p><div class="moods" role="group" aria-label="Humor">' +
       D.moods.map(function (m) { return '<button data-mood="' + m.id + '" aria-pressed="' + (sel === m.id) + '"><b>' + m.glyph + '</b>' + m.label + '</button>'; }).join('') + '</div><div id="mood-out"></div></div>' +
       '</div></section>' +
@@ -197,7 +170,7 @@
       '<section class="blk"><div class="band"><div class="bg">' + SACRED.draw('dove') + '</div><div class="in">' +
       '<span class="eyebrow">Palavra de Deus</span><blockquote>“Deixo-vos a paz, dou-vos a minha paz. Não se perturbe o vosso coração.”</blockquote>' +
       '<p class="la">Pacem relinquo vobis, pacem meam do vobis… Non turbetur cor vestrum.</p><cite>JOÃO 14,27</cite>' +
-      '<div class="row" style="margin-top:20px"><a class="btn gold" href="#/praticas/lectio">Fazer Lectio Divina</a></div></div></div></section>' +
+      '<div class="row" style="margin-top:20px"><a class="btn gold" href="#/praticas/lectio">Fazer Lectio Divina</a>' + Share.btn({ eyebrow: 'Palavra de Deus', text: 'Deixo-vos a paz, dou-vos a minha paz. Não se perturbe o vosso coração.', ref: 'João 14,27', quote: true, art: 'dove', slug: 'jo-14-27' }, 'Compartilhar', 'btn ghost') + '</div></div></div></section>' +
 
       '<section class="blk"><div class="sec-head"><div><span class="eyebrow">Leituras</span><h2>Fé e ansiedade</h2><p>Textos breves para compreender e acolher o que você sente.</p></div><a class="more" href="#/leituras">Ver todas →</a></div>' +
       '<div class="grid">' + ARTS.slice(0, 4).map(articleCard).join('') + '</div></section>' +
@@ -206,15 +179,14 @@
       '<div class="row"><a class="btn" href="tel:188">Ligar 188</a><a class="btn outline-w" href="#/ajuda">Outros contatos</a></div></div></div></section></div>';
     function show(id) {
       var m = D.moods.filter(function (x) { return x.id === id; })[0], p = pid(m.prayer);
-      var links = (m.act || []).map(function (a) { var pr = PRACTICES.filter(function (x) { return x.id === a; })[0]; return pr ? '<a class="btn ghost" href="#/praticas/' + a + '">' + esc(pr.title) + '</a>' : '<a class="btn ghost" href="#/diario">Escrever no diário</a>'; }).join(' ');
+      var links = (m.act || []).map(function (a) { var pr = PRACTICES.filter(function (x) { return x.id === a; })[0]; return pr ? '<a class="btn ghost" href="#/praticas/' + a + '">' + esc(pr.title) + '</a>' : ''; }).join(' ');
       $('#mood-out').innerHTML = '<p style="margin-top:16px">' + esc(m.tip) + '</p>' + prayerCard(p, true) + (links ? '<div class="row">' + links + '</div>' : '') +
         ((id === 'ansioso' || id === 'triste') ? '<p class="note">Se a angústia estiver muito forte, <a href="#/ajuda">procure apoio agora</a>.</p>' : '');
     }
-    bindCopy(app);
     if (sel) show(sel);
     $$('[data-mood]').forEach(function (b) {
       b.onclick = function () {
-        moods[today()] = b.dataset.mood; usave('moods', moods);
+        moods[today()] = b.dataset.mood; save('moods', moods);
         $$('[data-mood]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
         show(b.dataset.mood);
       };
@@ -239,7 +211,7 @@
   function stationBody(st, compact) {
     var sb = VS.stabat[(st.n - 1) % VS.stabat.length];
     return vr() + '<p class="verse" style="font-size:1.25rem">' + esc(st.med) + '<cite>' + esc(st.ref) + '</cite></p>' +
-      '<div class="pbox"><span class="lbl">Oração</span><p class="prayer">' + esc(st.pray) + '</p><p class="note" style="margin:.4em 0 0">Pai Nosso, Ave Maria, Glória ao Pai.</p></div>' +
+      '<div class="pbox"><span class="lbl">Oração</span><p class="prayer">' + esc(st.pray) + '</p><p class="note" style="margin:.4em 0 .8em">Pai Nosso, Ave Maria, Glória ao Pai.</p>' + Share.btn({ eyebrow: st.n + 'ª estação · Via Sacra', text: st.med, ref: st.title, svg: SACRED.station(st.n, st.sym), slug: 'via-sacra-' + st.n }) + '</div>' +
       (compact ? '' : '') + '<div class="stabat">' + body({ pt: sb.pt, la: sb.la }) + '<span class="note">Stabat Mater</span></div>';
   }
   routes.viasacra = function (parts) {
@@ -264,7 +236,7 @@
       '<div class="row" style="margin-top:24px">' + (prev ? '<a class="btn ghost" href="#/viasacra/' + prev.n + '">← ' + prev.n + 'ª estação</a>' : '') + (next ? '<a class="btn" href="#/viasacra/' + next.n + '">' + next.n + 'ª estação →</a>' : '<a class="btn" href="#/viasacra">Concluir</a>') + '</div></article>';
   };
 
-  /* ---------- Meu caminho: perfil, plano e desempenho ---------- */
+  /* ---------- utilidades de data, avisos e devocional ---------- */
   var DOW = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
   var MON = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
   function fdate(d) { return DOW[d.getDay()] + ', ' + d.getDate() + ' ' + MON[d.getMonth()]; }
@@ -272,200 +244,12 @@
     var t = $('#toast'); if (!t) { t = document.createElement('div'); t.id = 'toast'; t.className = 'toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
     t.textContent = msg; t.classList.add('on'); clearTimeout(t._h); t._h = setTimeout(function () { t.classList.remove('on'); }, 2600);
   }
-  function syncMe() {
-    var b = $('#me'); if (!b) return;
-    var c = PG.current;
-    b.innerHTML = c ? '<span class="me-av">' + esc(c.name[0].toUpperCase()) + '</span><span class="me-txt">' + esc(c.name.split(' ')[0]) + (PG.streak() ? ' · ' + PG.streak() + '🔥' : '') + '</span>' : ic('saint') + '<span class="me-txt">Entrar</span>';
-    b.setAttribute('aria-label', c ? 'Meu caminho: ' + c.name : 'Entrar no meu perfil');
-  }
   function devOfDay(off) { var n = DEV.length; return DEV[(((dayIndex() + (off || 0)) % n) + n) % n]; }
-  function devBtn() {
-    var done = PG.current && PG.did(PG.dkey(), 'devotional:*');
-    return '<button class="btn gold" data-devo="1"' + (done ? ' aria-pressed="true"' : '') + '>' + (done ? '✓ Devocional feito hoje' : 'Fiz o devocional de hoje') + '</button>';
-  }
   function devCard(d, full) {
     return '<div class="card devo"><span class="eyebrow">Devocional do dia · ' + esc(d.theme) + '</span><p class="verse">“' + esc(d.verse) + '”<cite>' + esc(d.ref) + '</cite></p><p>' + esc(d.text) + '</p>' +
-      '<div class="devo-act"><span class="lbl">Gesto de hoje</span><p>' + esc(d.act) + '</p></div><p class="prayer" style="font-size:1.15rem">' + esc(d.pray) + '</p>' +
-      (full === false ? '' : '<div class="row">' + devBtn() + (full ? '' : '<a class="btn ghost" href="#/devocional">Dias anteriores</a>') + '</div>') + '</div>';
+      '<div class="devo-act"><span class="lbl">Gesto de hoje</span><p>' + esc(d.act) + '</p></div><p class="prayer" style="font-size:1.15rem">' + esc(d.pray) + '</p>' + (full === false ? '' : '<div class="row" style="margin-bottom:10px">' + Share.btn({ eyebrow: 'Devocional · ' + d.theme, text: d.verse, ref: d.ref, sub: d.act, quote: true, art: 'book', slug: 'devocional' }) + '</div>') +
+      (full ? '' : '<div class="row"><a class="btn ghost" href="#/devocional">Dias anteriores</a></div>') + '</div>';
   }
-  function readingOfDay() { return ARTS[dayIndex() % ARTS.length]; }
-  // Rótulo e link de um item do plano.
-  function planInfo(it) {
-    if (it.kind === 'practice') { var pr = PRACTICES.filter(function (x) { return x.id === it.ref; })[0]; return { label: pr ? pr.title : it.ref, href: '#/praticas/' + it.ref, tag: 'Prática' }; }
-    if (it.kind === 'prayer') { var p = pid(it.ref); return { label: p ? p.title : it.ref, href: '#/oracao/' + it.ref, tag: 'Oração' }; }
-    if (it.kind === 'devotional') return { label: 'Devocional do dia: ' + devOfDay().theme, href: '#/devocional', tag: 'Devocional' };
-    if (it.kind === 'reading') { var a = readingOfDay(); return { label: 'Leitura do dia: ' + a.title, href: '#/leituras/' + a.id, tag: 'Leitura' }; }
-    return { label: it.label, href: null, tag: 'Pessoal' };
-  }
-  function planList(editable) {
-    var c = PG.current, plan = c.plan;
-    if (!plan.length) return '<p class="note">Seu plano está vazio. Escolha um modelo abaixo ou adicione itens.</p>';
-    return '<ul class="plan">' + plan.map(function (it) {
-      var inf = planInfo(it), done = PG.itemDone(it);
-      var check = it.kind === 'custom' ? '<button class="pcheck" data-plan-toggle="' + it.id + '" aria-pressed="' + done + '" aria-label="Marcar ' + esc(inf.label) + '"></button>' : '<span class="pcheck" aria-hidden="true" data-done="' + done + '"></span>';
-      return '<li class="' + (done ? 'done' : '') + '">' + check + '<div class="pl-txt"><span class="meta">' + inf.tag + '</span>' + (inf.href ? '<a href="' + inf.href + '">' + esc(inf.label) + '</a>' : '<span>' + esc(inf.label) + '</span>') + '</div>' +
-        (editable ? '<button class="icon-btn pl-del" data-plan-del="' + it.id + '" aria-label="Remover ' + esc(inf.label) + '">✕</button>' : (done ? '<span class="pl-ok">feito</span>' : (inf.href ? '<a class="btn ghost sm" href="' + inf.href + '">Fazer</a>' : ''))) + '</li>';
-    }).join('') + '</ul>';
-  }
-  function planProgress() {
-    var plan = PG.current.plan, n = plan.filter(function (it) { return PG.itemDone(it); }).length;
-    return { n: n, total: plan.length, pct: plan.length ? Math.round(n / plan.length * 100) : 0 };
-  }
-  function todayCard() {
-    var c = PG.current;
-    if (!c) return '<div class="card today-cta"><div><span class="eyebrow">Meu caminho</span><h3 style="margin:.2em 0">Acompanhe sua vida de oração</h3><p class="note" style="margin:0">Crie um perfil neste aparelho para montar um plano diário e ver seu progresso.</p></div><a class="btn gold" href="#/perfil">Criar meu perfil</a></div>';
-    var pp = planProgress(), mins = PG.minutes(PG.dkey()), st = PG.streak();
-    return '<div class="card today"><div class="today-head"><div><span class="eyebrow">Hoje · ' + esc(fdate(new Date())) + '</span><h3 style="margin:.2em 0">Paz e bem, ' + esc(c.name.split(' ')[0]) + '</h3></div>' +
-      '<div class="today-stats"><div><b>' + st + '</b><span>' + (st === 1 ? 'dia seguido' : 'dias seguidos') + '</span></div><div><b>' + mins + '</b><span>de ' + c.goal + ' min</span></div><div><b>' + pp.n + '/' + pp.total + '</b><span>do plano</span></div></div></div>' +
-      '<div class="meter" role="progressbar" aria-label="Plano de hoje" aria-valuenow="' + pp.pct + '" aria-valuemin="0" aria-valuemax="100"><i style="width:' + pp.pct + '%"></i></div>' +
-      planList(false) + '<a class="more" href="#/perfil">Ver meu desempenho →</a></div>';
-  }
-
-  // Calendário das últimas 12 semanas (rampa sequencial de um só tom).
-  function heatmap(goal) {
-    var today = new Date(), start = PG.addDays(today, -(7 * 11 + today.getDay())), cells = '', rows = [];
-    for (var w = 0; w < 12; w++) {
-      var col = '';
-      for (var d = 0; d < 7; d++) {
-        var dt = PG.addDays(start, w * 7 + d), k = PG.dkey(dt), fut = dt > today;
-        var m = PG.minutes(k), n = PG.day(k).acts.length;
-        var lv = fut ? -1 : n === 0 ? 0 : m < Math.ceil(goal / 2) ? 1 : m < goal ? 2 : m < goal * 2 ? 3 : 4;
-        var tip = fdate(dt) + ' · ' + (n ? m + ' min · ' + n + (n === 1 ? ' atividade' : ' atividades') : 'sem registro');
-        col += '<i class="hm-c l' + lv + (k === PG.dkey() ? ' now' : '') + '" data-tip="' + esc(tip) + '"></i>';
-        if (!fut && n) rows.push([dt, m, n]);
-      }
-      cells += '<div class="hm-col">' + col + '</div>';
-    }
-    return '<div class="hm-wrap"><div class="hm-days" aria-hidden="true"><span></span><span>seg</span><span></span><span>qua</span><span></span><span>sex</span><span></span></div>' +
-      '<div class="hm" role="img" aria-label="Calendário de oração das últimas 12 semanas: ' + rows.length + ' dias com registro">' + cells + '</div></div>' +
-      '<div class="hm-legend" aria-hidden="true"><span>Menos</span><i class="hm-c l0"></i><i class="hm-c l1"></i><i class="hm-c l2"></i><i class="hm-c l3"></i><i class="hm-c l4"></i><span>Mais</span><span class="note" style="margin-left:10px">cor mais forte = mais minutos (meta: ' + goal + ' min)</span></div>';
-  }
-  // Colunas: minutos por dia nos últimos 14 dias.
-  function columns(goal) {
-    var today = new Date(), data = [];
-    for (var i = 13; i >= 0; i--) { var dt = PG.addDays(today, -i), k = PG.dkey(dt); data.push({ dt: dt, m: PG.minutes(k), n: PG.day(k).acts.length }); }
-    var max = Math.max(goal, Math.max.apply(null, data.map(function (x) { return x.m; })));
-    var step = max <= 10 ? 5 : max <= 30 ? 10 : max <= 60 ? 20 : max <= 150 ? 50 : 100, top = Math.ceil(max / step) * step, ticks = [];
-    for (var t = 0; t <= top; t += step) ticks.push(t);
-    var peak = data.reduce(function (a, x, i) { return x.m > data[a].m ? i : a; }, 0);
-    var grid = ticks.map(function (t) { return '<div class="cc-grid" style="bottom:' + (t / top * 100) + '%"><span>' + t + '</span></div>'; }).join('') +
-      '<div class="cc-goal" style="bottom:' + (goal / top * 100) + '%"><span>meta</span></div>';
-    var bars = data.map(function (x, i) {
-      var h = x.m / top * 100, lab = (i === 13 || (i === peak && x.m > 0)) && x.m ? '<em>' + x.m + '</em>' : '';
-      return '<div class="cc-slot" data-tip="' + esc(fdate(x.dt) + ' · ' + x.m + ' min · ' + x.n + (x.n === 1 ? ' atividade' : ' atividades')) + '"><div class="cc-bar' + (x.m ? '' : ' zero') + '" style="height:' + h + '%">' + lab + '</div><span class="cc-x">' + (i % 2 === 1 || i === 13 ? x.dt.getDate() : '') + '</span></div>';
-    }).join('');
-    var table = '<details class="tview"><summary>Ver dados em tabela</summary><table><thead><tr><th>Dia</th><th>Minutos</th><th>Atividades</th></tr></thead><tbody>' +
-      data.slice().reverse().map(function (x) { return '<tr><td>' + fdate(x.dt) + '</td><td>' + x.m + '</td><td>' + x.n + '</td></tr>'; }).join('') + '</tbody></table></details>';
-    return '<div class="cc" role="img" aria-label="Minutos de oração por dia nos últimos 14 dias">' + grid + '<div class="cc-bars">' + bars + '</div></div>' + table;
-  }
-  function bindTips(root) {
-    var tip = $('#ctip'); if (!tip) { tip = document.createElement('div'); tip.id = 'ctip'; tip.className = 'ctip'; document.body.appendChild(tip); }
-    $$('[data-tip]', root).forEach(function (el) {
-      el.onmouseenter = function () { tip.textContent = el.dataset.tip; tip.classList.add('on'); var r = el.getBoundingClientRect(); tip.style.left = (r.left + r.width / 2) + 'px'; tip.style.top = (r.top - 8) + 'px'; };
-      el.onmouseleave = function () { tip.classList.remove('on'); };
-    });
-  }
-
-  routes.perfil = function () {
-    var c = PG.current;
-    if (!c) {
-      var list = PG.profiles();
-      app.innerHTML = banner('glory', 'Meu caminho', 'Entrar', 'Crie um perfil para montar seu plano diário e acompanhar sua vida de oração. Os dados ficam só neste aparelho.') +
-        '<div class="wrap" style="max-width:780px"><div class="panel">' +
-        (list.length ? '<span class="eyebrow">Perfis neste aparelho</span><div class="plist">' + list.map(function (x) { return '<button class="pbtn-prof" data-login="' + x.id + '"><span class="me-av">' + esc(x.name[0].toUpperCase()) + '</span><span>' + esc(x.name) + '</span>' + (x.pin ? '<small>🔒 PIN</small>' : '') + '</button>'; }).join('') + '</div>' +
-          '<form id="pinf" class="pinf" hidden><label for="pin" class="meta">PIN de <b id="pinname"></b></label><input id="pin" type="password" inputmode="numeric" autocomplete="current-password" maxlength="6"><button class="btn">Entrar</button><p class="err" id="pinerr" role="alert"></p></form><hr>' : '') +
-        '<span class="eyebrow">Novo perfil</span><form id="newf" class="formg"><label>Seu nome<input id="nn" required maxlength="40" autocomplete="nickname" placeholder="Ex.: Maria"></label>' +
-        '<label>PIN (opcional, 4 a 6 números)<input id="np" type="password" inputmode="numeric" pattern="[0-9]{4,6}" maxlength="6" autocomplete="new-password"></label>' +
-        '<p class="note">O PIN evita que outra pessoa que usa este aparelho abra seu perfil sem querer. Não é uma senha forte: os dados não são criptografados.</p><button class="btn gold">Criar perfil</button></form>' +
-        '<hr><span class="eyebrow">Outro aparelho?</span><p class="note">Traga seus dados com o arquivo de backup exportado no outro aparelho.</p><label class="btn ghost sm" style="cursor:pointer">Importar backup<input type="file" id="impf" accept="application/json,.json" hidden></label></div></div>';
-      var target = null;
-      $$('[data-login]').forEach(function (b) {
-        b.onclick = function () {
-          var pr = list.filter(function (x) { return x.id === b.dataset.login; })[0];
-          if (!pr.pin) { PG.login(pr.id).then(function () { afterLogin(); }); return; }
-          target = pr; $('#pinf').hidden = false; $('#pinname').textContent = pr.name; $('#pin').value = ''; $('#pin').focus();
-        };
-      });
-      if ($('#pinf')) $('#pinf').onsubmit = function (e) {
-        e.preventDefault();
-        PG.login(target.id, $('#pin').value).then(function (ok) { if (ok) afterLogin(); else { $('#pinerr').textContent = 'PIN incorreto.'; $('#pin').select(); } });
-      };
-      $('#newf').onsubmit = function (e) {
-        e.preventDefault();
-        var name = $('#nn').value.trim(), pin = $('#np').value;
-        if (!name) return;
-        if (pin && !/^\d{4,6}$/.test(pin)) { toast('O PIN deve ter de 4 a 6 números.'); return; }
-        PG.create(name, pin).then(function () { PG.applyPreset('suave'); afterLogin(true); });
-      };
-      $('#impf').onchange = function () {
-        var f = this.files[0]; if (!f) return;
-        f.text().then(function (t) {
-          try { var d = PG.importJSON(t); toast('Backup de ' + d.name + ' importado.'); route(); } catch (err) { toast(err.message || 'Não foi possível ler o arquivo.'); }
-        });
-      };
-      return;
-    }
-    var today = PG.dkey(), now = new Date(), monthDays = 0, monthMin = 0, total = 0;
-    Object.keys(c.log).forEach(function (k) {
-      var n = c.log[k].acts.length; total += n;
-      if (k.slice(0, 7) === today.slice(0, 7) && n) { monthDays++; monthMin += PG.minutes(k); }
-    });
-    var recent = [];
-    Object.keys(c.log).sort().reverse().slice(0, 14).forEach(function (k) { c.log[k].acts.slice().reverse().forEach(function (a) { if (recent.length < 12) recent.push([k, a]); }); });
-    var practiceOpts = PRACTICES.map(function (x) { return '<option value="practice:' + x.id + '">Prática · ' + esc(x.title) + '</option>'; }).join('');
-    var prayerOpts = D.prayers.filter(function (x) { return x.cat !== 'Cantos tradicionais'; }).map(function (x) { return '<option value="prayer:' + x.id + '">Oração · ' + esc(x.title) + '</option>'; }).join('');
-    app.innerHTML = banner('glory', 'Meu caminho', c.name, 'Cada dia é um recomeço. Não é uma competição: o que importa é voltar, com paciência, para perto de Deus.') +
-      '<div class="wrap"><section class="blk" style="margin-top:28px">' + todayCard() + '</section>' +
-      '<section class="blk"><div class="sec-head"><div><span class="eyebrow">Desempenho</span><h2>Sua caminhada</h2></div></div>' +
-      '<div class="tiles"><div class="tile2"><span>Sequência atual</span><b>' + PG.streak() + '</b><small>' + (PG.streak() === 1 ? 'dia seguido' : 'dias seguidos') + '</small></div>' +
-      '<div class="tile2"><span>Melhor sequência</span><b>' + PG.best() + '</b><small>dias</small></div>' +
-      '<div class="tile2"><span>Dias com oração em ' + MON[now.getMonth()] + '</span><b>' + monthDays + '</b><small>de ' + now.getDate() + ' dias</small></div>' +
-      '<div class="tile2"><span>Minutos em ' + MON[now.getMonth()] + '</span><b>' + monthMin.toLocaleString('pt-BR') + '</b><small>' + total + ' atividades no total</small></div></div>' +
-      '<div class="grid two" style="margin-top:18px"><div class="card"><h3 class="ch-t">Calendário de oração</h3><p class="note" style="margin-top:0">Últimas 12 semanas</p>' + heatmap(c.goal) + '</div>' +
-      '<div class="card"><h3 class="ch-t">Minutos por dia</h3><p class="note" style="margin-top:0">Últimos 14 dias</p>' + columns(c.goal) + '</div></div>' +
-      '<div class="card"><h3 class="ch-t">Atividades recentes</h3>' + (recent.length ? '<ul class="recent">' + recent.map(function (r) { var d = new Date(r[0] + 'T12:00:00'); return '<li><span class="meta">' + fdate(d) + '</span><span>' + esc(r[1].l) + '</span><small>' + (r[1].m ? r[1].m + ' min' : '') + '</small></li>'; }).join('') + '</ul>' : '<p class="note">Nada registrado ainda. Conclua uma prática, marque uma oração como rezada ou uma leitura como lida.</p>') + '</div></section>' +
-
-      '<section class="blk"><div class="sec-head"><div><span class="eyebrow">Plano diário</span><h2>Meu plano</h2><p>Monte sua rotina. Os itens se marcam sozinhos quando você conclui a prática, reza a oração ou lê o texto.</p></div></div>' +
-      '<div class="grid two"><div class="card">' + planList(true) +
-      '<form id="addf" class="formg" style="margin-top:14px"><label>Adicionar ao plano<select id="addsel"><option value="devotional">Devocional do dia</option><option value="reading">Leitura do dia</option><optgroup label="Práticas">' + practiceOpts + '</optgroup><optgroup label="Orações">' + prayerOpts + '</optgroup><option value="custom">Outro (escrever)…</option></select></label>' +
-      '<input id="addtxt" placeholder="Ex.: Ir à Missa, caminhar, ligar para minha mãe" maxlength="60" hidden><button class="btn">Adicionar</button></form>' +
-      '<label class="formg" style="margin-top:16px">Meta diária de oração<select id="goal">' + [5, 10, 15, 20, 30, 45, 60].map(function (g) { return '<option value="' + g + '"' + (g === c.goal ? ' selected' : '') + '>' + g + ' minutos</option>'; }).join('') + '</select></label></div>' +
-      '<div class="card"><span class="eyebrow">Modelos</span><p class="note" style="margin-top:.3em">Substituem o plano atual.</p>' + PG.PRESETS.map(function (pr) { return '<button class="preset" data-preset="' + pr.id + '"><strong>' + esc(pr.name) + '</strong><small>' + esc(pr.desc) + ' Meta: ' + pr.goal + ' min.</small></button>'; }).join('') + '</div></div></section>' +
-
-      '<section class="blk"><div class="card"><span class="eyebrow">Conta e dados</span><h3 style="margin:.3em 0 .6em">Seus dados, neste aparelho</h3>' +
-      '<p class="note">Não há servidor: tudo fica guardado no navegador deste aparelho. Para usar em outro celular ou computador, exporte o backup e importe lá. Se limpar os dados do navegador, o perfil é apagado.</p>' +
-      '<div class="row"><button class="btn" id="exp">Exportar backup</button><button class="btn ghost" id="chpin">' + (c.pin ? 'Trocar ou remover PIN' : 'Definir PIN') + '</button><button class="btn ghost" id="out">Trocar de perfil / sair</button><button class="btn ghost danger" id="rm">Apagar perfil</button></div></div></section></div>';
-
-    bindTips(app);
-    $('#addsel').onchange = function () { $('#addtxt').hidden = this.value !== 'custom'; if (!$('#addtxt').hidden) $('#addtxt').focus(); };
-    $('#addf').onsubmit = function (e) {
-      e.preventDefault();
-      var v = $('#addsel').value;
-      if (v === 'custom') { var t = $('#addtxt').value.trim(); if (!t) return; PG.addItem({ kind: 'custom', label: t }); }
-      else if (v === 'reading' || v === 'devotional') PG.addItem({ kind: v });
-      else { var sp = v.split(':'); PG.addItem({ kind: sp[0], ref: sp[1] }); }
-      route();
-    };
-    $('#goal').onchange = function () { c.goal = +this.value; PG.save(); route(); };
-    $$('[data-preset]').forEach(function (b) { b.onclick = function () { if (!c.plan.length || confirm('Substituir o plano atual pelo modelo “' + b.querySelector('strong').textContent + '”?')) { PG.applyPreset(b.dataset.preset); route(); } }; });
-    $('#exp').onclick = function () {
-      var a = document.createElement('a'), url = URL.createObjectURL(new Blob([PG.exportJSON()], { type: 'application/json' }));
-      a.href = url; a.download = 'paz-em-oracao-' + c.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + today + '.json';
-      document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
-    };
-    $('#chpin').onclick = function () {
-      var pin = prompt('Novo PIN (4 a 6 números). Deixe em branco para remover o PIN.');
-      if (pin === null) return;
-      if (pin && !/^\d{4,6}$/.test(pin)) { toast('O PIN deve ter de 4 a 6 números.'); return; }
-      PG.setPin(pin).then(function () { toast(pin ? 'PIN definido.' : 'PIN removido.'); route(); });
-    };
-    $('#out').onclick = function () { PG.logout(); syncMe(); route(); };
-    $('#rm').onclick = function () {
-      if (prompt('Isto apaga para sempre o perfil, o plano, o histórico e o diário de ' + c.name + ' neste aparelho. Para confirmar, digite APAGAR.') === 'APAGAR') { PG.remove(c.id); syncMe(); location.hash = '#/perfil'; route(); }
-    };
-  };
-  function afterLogin(isNew) { syncMe(); toast(isNew ? 'Perfil criado. Montamos um plano inicial para você.' : 'Bem-vindo(a) de volta!'); if (location.hash === '#/perfil') route(); else location.hash = '#/perfil'; }
-
   routes.devocional = function () {
     var past = [1, 2, 3, 4, 5, 6].map(function (k) { return { d: devOfDay(-k), dt: new Date(Date.now() - k * 864e5) }; });
     app.innerHTML = banner('book', 'Devocional diário', 'Um encontro por dia', 'Um versículo, uma reflexão, um gesto concreto e uma oração. Cinco minutos para começar o dia com Deus.') +
@@ -479,30 +263,52 @@
     app.innerHTML = banner('window', 'Oração · ' + p.cat, titleOf(p), '', ['#/oracoes/' + encodeURIComponent(p.cat), 'Orações · ' + p.cat]) + '<div class="wrap" style="max-width:820px;margin-top:28px">' + prayerCard(p, true) + '</div>';
   };
 
-  // Ações registráveis em qualquer tela (orações rezadas, leituras lidas, itens pessoais do plano).
+  /* ---------- Instalar como app (PWA) ---------- */
+  var installEvt = null;
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); installEvt = e; $$('[data-install]').forEach(function (b) { b.hidden = false; }); });
+  window.addEventListener('appinstalled', function () { installEvt = null; toast('App instalado! Procure o ícone “Paz em Oração” na tela inicial.'); var c = $('.install-card'); if (c) c.remove(); });
+  function standalone() { return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true; }
+  function platform() {
+    var ua = navigator.userAgent || '';
+    if (/iphone|ipad|ipod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'ios';
+    if (/android/i.test(ua)) return 'android';
+    return 'desktop';
+  }
+  function doInstall() {
+    if (installEvt) { installEvt.prompt(); installEvt.userChoice.then(function () { installEvt = null; }); }
+    else location.hash = '#/instalar';
+  }
+  function installCard() {
+    if (standalone() || load('installHide', false)) return '';
+    return '<section class="blk"><div class="card install-card"><img src="icons/icon-192.png" alt="" width="64" height="64"><div><span class="eyebrow">Aplicativo</span><h3 style="margin:.2em 0">Tenha o Paz em Oração na tela inicial</h3><p class="note" style="margin:0">Abre como um app, em tela cheia, e funciona mesmo sem internet. Não precisa de loja de aplicativos.</p></div>' +
+      '<div class="row"><button class="btn gold" data-do-install>Instalar</button><button class="btn ghost sm" data-hide-install>Agora não</button></div></div></section>';
+  }
   document.addEventListener('click', function (e) {
-    var b = e.target.closest('[data-prayed],[data-read],[data-plan-toggle],[data-plan-del],[data-devo]');
-    if (!b) return;
-    if (!PG.current) { toast('Crie ou entre no seu perfil para registrar sua caminhada.'); location.hash = '#/perfil'; return; }
-    var today = PG.dkey();
-    if (b.dataset.prayed) {
-      var p = pid(b.dataset.prayed); if (PG.did(today, 'prayer:' + p.id)) { toast('Esta oração já está registrada hoje.'); return; }
-      PG.log('prayer:' + p.id, p.title, Math.max(1, Math.ceil(p.pt.split(/\s+/).length / 110)), 'prayer');
-      b.textContent = '✓ Rezada hoje'; b.setAttribute('aria-pressed', 'true'); toast('Oração registrada. Amém!');
-    } else if (b.dataset.read) {
-      var a = ARTS.filter(function (x) { return x.id === b.dataset.read; })[0]; if (PG.did(today, 'reading:' + a.id)) return;
-      PG.log('reading:' + a.id, a.title, a.minutes, 'reading');
-      b.textContent = '✓ Lida hoje'; b.setAttribute('aria-pressed', 'true'); toast('Leitura registrada.');
-    } else if (b.dataset.devo) {
-      if (PG.did(today, 'devotional:*')) return;
-      PG.log('devotional:*', 'Devocional: ' + devOfDay().theme, 5, 'devotional');
-      $$('[data-devo]').forEach(function (x) { x.textContent = '✓ Devocional feito hoje'; x.setAttribute('aria-pressed', 'true'); }); toast('Devocional registrado. Bom dia com Deus!');
-      if ($('.today')) route();
-    } else if (b.dataset.planToggle) {
-      var it = PG.current.plan.filter(function (x) { return x.id === b.dataset.planToggle; })[0]; if (it) PG.toggleCustom(it); route();
-    } else if (b.dataset.planDel) { PG.removeItem(b.dataset.planDel); route(); }
-    syncMe();
+    if (e.target.closest('[data-do-install]')) doInstall();
+    if (e.target.closest('[data-hide-install]')) { save('installHide', true); var c = $('.install-card'); if (c) c.closest('section').remove(); }
   });
+  routes.instalar = function () {
+    var pf = platform();
+    var ios = '<div class="card inst' + (pf === 'ios' ? ' mine' : '') + '"><span class="eyebrow">iPhone e iPad</span><h3>No Safari</h3><ol class="steps">' +
+      '<li>Abra este site no <strong>Safari</strong>.</li>' +
+      '<li>Toque no botão <strong>Compartilhar</strong> <span class="kbd">' + ic('share') + '</span> (quadrado com seta para cima), na barra de baixo ou de cima.</li>' +
+      '<li>Role a lista e toque em <strong>Adicionar à Tela de Início</strong> <span class="kbd">＋</span>.</li>' +
+      '<li>Confirme em <strong>Adicionar</strong>. O ícone “Paz em Oração” aparece junto com seus apps.</li></ol>' +
+      '<p class="note">No iOS 16.4 ou mais recente, o Chrome e outros navegadores também mostram essa opção no menu Compartilhar.</p></div>';
+    var android = '<div class="card inst' + (pf === 'android' ? ' mine' : '') + '"><span class="eyebrow">Android</span><h3>No Chrome</h3>' +
+      '<p><button class="btn gold" data-do-install data-install' + (installEvt ? '' : ' hidden') + '>Instalar agora</button></p><ol class="steps">' +
+      '<li>Abra este site no <strong>Chrome</strong> (ou Samsung Internet, Edge).</li>' +
+      '<li>Toque no menu <span class="kbd">⋮</span> no canto superior direito.</li>' +
+      '<li>Toque em <strong>Instalar app</strong> ou <strong>Adicionar à tela inicial</strong>.</li>' +
+      '<li>Confirme em <strong>Instalar</strong>. Pronto: o app abre em tela cheia, como os outros.</li></ol></div>';
+    var desk = '<div class="card inst' + (pf === 'desktop' ? ' mine' : '') + '"><span class="eyebrow">Computador</span><h3>No Chrome ou Edge</h3><ol class="steps">' +
+      '<li>Clique no ícone de instalar <span class="kbd">⊕</span> no fim da barra de endereço, ou no menu do navegador.</li><li>Escolha <strong>Instalar Paz em Oração</strong>.</li></ol></div>';
+    var order = pf === 'ios' ? [ios, android, desk] : pf === 'android' ? [android, ios, desk] : [desk, android, ios];
+    app.innerHTML = banner('window', 'Aplicativo', 'Instalar no celular', 'O Paz em Oração pode ficar na tela inicial como um app: abre em tela cheia, carrega rápido e funciona sem internet. É gratuito e não pede cadastro.') +
+      '<div class="wrap" style="max-width:900px;margin-top:28px">' + (standalone() ? '<div class="card"><h3>Você já está usando o app instalado. 🙏</h3></div>' : '') +
+      '<div class="grid two">' + order.join('') + '</div>' +
+      '<p class="note">Atalhos: depois de instalar, toque e segure o ícone para abrir direto Respirar com oração, Santo Terço, Via Sacra ou Preciso de ajuda (Android).</p></div>';
+  };
 
   routes.santos = function (parts) {
     var st = parts[1] && SAINTS.filter(function (x) { return x.id === parts[1]; })[0];
@@ -517,8 +323,7 @@
         '<div class="chips"><a class="chip" href="#/santos/tema" aria-current="' + !theme + '">Todas</a>' + themes.map(function (t) { return '<a class="chip" href="#/santos/tema/' + encodeURIComponent(t) + '" aria-current="' + (t === theme) + '">' + esc(t) + '</a>'; }).join('') + '</div>' +
         '<div class="qwall">' + qs.map(function (x) { return quoteCard(x); }).join('') + '</div>' +
         '<p class="note">Citações com a fonte indicada. As marcadas como “atribuída” são tradicionalmente ligadas ao santo, sem fonte documental precisa.</p></section></div>';
-      bindCopy(app);
-      if (parts[1] === 'tema') setTimeout(function () { var f = $('#frases'); if (f) f.scrollIntoView(); }, 0);
+        if (parts[1] === 'tema') setTimeout(function () { var f = $('#frases'); if (f) f.scrollIntoView(); }, 0);
       return;
     }
     var k = SAINTS.indexOf(st), nx = SAINTS[(k + 1) % SAINTS.length];
@@ -529,13 +334,8 @@
       '<h3 class="h-sec">Para hoje</h3><p>' + esc(st.help) + '</p>' +
       '<div class="pbox"><span class="lbl">Pedido de intercessão</span><p class="prayer">' + esc(st.prayer) + '</p></div>' +
       '<div class="row"><a class="btn" href="#/santos/' + nx.id + '">Próximo: ' + esc(nx.name) + '</a><a class="btn ghost" href="#/santos">Todos os santos</a></div></article>';
-    bindCopy(app);
   };
 
-  function readBtn(a) {
-    var done = PG.current && PG.did(PG.dkey(), 'reading:' + a.id);
-    return '<button class="btn gold" data-read="' + a.id + '"' + (done ? ' aria-pressed="true"' : '') + '>' + (done ? '✓ Lida hoje' : 'Marcar como lida') + '</button>';
-  }
   routes.leituras = function (parts) {
     var a = parts[1] && ARTS.filter(function (x) { return x.id === parts[1]; })[0];
     if (!a) {
@@ -548,26 +348,8 @@
     app.innerHTML = banner(ART_OF[a.id], a.tag + ' · ' + a.minutes + ' min de leitura', a.title, '', ['#/leituras', 'Todas as leituras']) +
       '<article class="article"><p class="lead">' + esc(a.lead) + '</p>' + v +
       a.body.map(function (p) { return '<p>' + p + '</p>'; }).join('') +
-      '<div class="pbox"><span class="lbl">Oração</span><p class="prayer">' + esc(a.prayer) + '</p></div>' +
-      '<div class="row" style="margin-bottom:14px">' + readBtn(a) + '</div>' +
+      '<div class="pbox"><span class="lbl">Oração</span><p class="prayer">' + esc(a.prayer) + '</p>' + Share.btn({ eyebrow: a.title, text: a.prayer, art: ART_OF[a.id], slug: a.id }) + '</div>' +
       '<div class="row"><a class="btn" href="#/leituras/' + n.id + '">Próxima: ' + esc(n.title) + '</a><a class="btn ghost" href="#/ajuda">Preciso de apoio</a></div></article>';
-  };
-
-  routes.diario = function () {
-    var entries = uload('journal', []);
-    app.innerHTML = banner('candle', 'Diário', 'Diário da alma', 'Escreva o que quer agradecer ou entregar a Deus. As anotações ficam apenas neste aparelho.') +
-      '<div class="wrap" style="max-width:780px"><div class="panel"><label for="t" class="eyebrow">O que está no seu coração hoje?</label><textarea id="t" style="margin-top:10px" placeholder="Senhor, hoje eu te agradeço por…"></textarea><div class="row" style="margin-top:14px"><button class="btn" id="s">Salvar anotação</button></div></div><section id="list" style="margin-top:24px"></section></div>';
-    function render() {
-      $('#list').innerHTML = entries.map(function (e, n) {
-        return '<div class="entry"><span class="meta">' + esc(e.d) + '</span><p class="prayer">' + esc(e.t) + '</p><button class="btn ghost" data-del="' + n + '">Apagar</button></div>';
-      }).join('') || '<p class="note">Nenhuma anotação ainda.</p>';
-      $$('[data-del]').forEach(function (b) { b.onclick = function () { entries.splice(+b.dataset.del, 1); usave('journal', entries); render(); }; });
-    }
-    $('#s').onclick = function () {
-      var t = $('#t'), v = t.value.trim(); if (!v) return;
-      entries.unshift({ d: new Date().toLocaleString('pt-BR'), t: v }); usave('journal', entries); t.value = ''; render();
-    };
-    render();
   };
 
   routes.ajuda = function () {
@@ -588,7 +370,6 @@
         '<div class="wrap" style="margin-top:32px"><div class="grid">' + PRACTICES.map(practiceCard).join('') + '</div></div>';
       return;
     }
-    curPractice = { id: p.id, title: p.title, start: Date.now() };
     app.innerHTML = banner(p.art, 'Prática · ' + p.min, p.title, p.desc, ['#/praticas', 'Todas as práticas']) + '<div class="wrap" style="max-width:820px"><div class="panel" id="pr"></div></div>';
     PR[p.id]($('#pr'));
   };
@@ -661,7 +442,7 @@
       var ph = PATTERNS[$('#pt').value].ph, max = +$('#cy').value, pi = 0, left = 0, cur = null, cycles = 0;
       function tick() {
         if (left <= 0) {
-          if (pi > 0 && pi % ph.length === 0) { cycles++; if (max && cycles >= max) { stop('Amém'); phr.textContent = ''; cnt.textContent = cycles + ' ciclos concluídos'; A.chime(); var lg = logPractice(); if (lg) cnt.insertAdjacentHTML('afterend', lg); return; } }
+          if (pi > 0 && pi % ph.length === 0) { cycles++; if (max && cycles >= max) { stop('Amém'); phr.textContent = ''; cnt.textContent = cycles + ' ciclos concluídos'; A.chime(); return; } }
           cur = ph[pi % ph.length]; pi++; left = cur[1];
           orb.style.transitionDuration = cur[1] + 's'; orb.style.transform = 'scale(' + cur[2] + ')';
           var pp = phrase(), inhale = cur[0] === 'Inspire' || cur[0] === 'Segure' && cur[2] > 1;
@@ -689,11 +470,10 @@
     var steps = [
       { html: '<div class="stage"><span class="meta">Lectio · Ler</span><h3>' + esc(l.ref) + '</h3><div style="text-align:left">' + text + '</div><p class="note">Leia devagar, duas ou três vezes, em voz baixa. Não analise: apenas escute.</p></div>' },
       { html: '<div class="stage"><span class="meta">Meditatio · Meditar</span><h3>Que palavra ou frase chama a sua atenção?</h3><div style="text-align:left">' + text + '</div><p>Repita-a. O que ela diz a você, hoje, com o que você está vivendo?</p></div>' },
-      { html: '<div class="stage"><span class="meta">Oratio · Rezar</span><h3>Responda a Deus</h3><p>Fale com Ele com simplicidade: agradeça, peça, chore, questione. Pode ser com suas próprias palavras.</p><textarea id="lt" placeholder="Se quiser, escreva sua oração aqui (opcional)"></textarea></div>' },
+      { html: '<div class="stage"><span class="meta">Oratio · Rezar</span><h3>Responda a Deus</h3><p>Fale com Ele com simplicidade: agradeça, peça, chore, questione. Pode ser com suas próprias palavras.</p></div>' },
       { html: '<div class="stage"><span class="meta">Contemplatio · Contemplar</span><h3>Fique em silêncio</h3><p>Descanse na presença de Deus, sem falar e sem esforço. Se vierem pensamentos, deixe-os passar e volte à palavra que escolheu.</p><a class="btn ghost" href="#/praticas/silencio">Abrir o temporizador de silêncio</a></div>' }
     ];
     stepper(el, steps, { endLabel: 'Concluir', onEnd: function () {
-      var t = $('#lt'); if (t && t.value.trim()) { var j = uload('journal', []); j.unshift({ d: new Date().toLocaleString('pt-BR'), t: l.ref + '\n' + t.value.trim() }); usave('journal', j); }
       el.innerHTML = doneCard('Que a Palavra continue a agir em você ao longo do dia.');
     } });
   };
@@ -712,7 +492,7 @@
       running = true; left = +$('#mn').value * 60; go.textContent = 'Encerrar'; A.chime(); tm.textContent = fmt(left);
       every(function () {
         left--; tm.textContent = fmt(Math.max(left, 0));
-        if (left <= 0) { running = false; clearTimers(); A.chime(); go.textContent = 'Começar'; tm.textContent = 'Amém'; var lg = logPractice(+$('#mn').value); if (lg) go.insertAdjacentHTML('afterend', lg); }
+        if (left <= 0) { running = false; clearTimers(); A.chime(); go.textContent = 'Começar'; tm.textContent = 'Amém'; }
       }, 1000);
     };
   };
@@ -730,7 +510,7 @@
         (lang === 'both' && p.la ? '<p class="prayer" lang="la">' + esc(p.la) + '</p>' : '') +
         '<div class="row" style="justify-content:center"><button class="btn ghost" id="rs">Zerar</button></div></div>';
       $('#jp').onchange = function () { st.id = this.value; save('jac', st); render(); };
-      $('#tp').onclick = function () { st.n++; st.id = p.id; save('jac', st); $('.count', el).textContent = st.n; if (navigator.vibrate) navigator.vibrate(15); if (curPractice && !curPractice.logged) logPractice(1); };
+      $('#tp').onclick = function () { st.n++; st.id = p.id; save('jac', st); $('.count', el).textContent = st.n; if (navigator.vibrate) navigator.vibrate(15); };
       $('#rs').onclick = function () { st.n = 0; save('jac', st); render(); };
     }
     render();
@@ -779,12 +559,10 @@
   // Exame do dia
   PR.exame = function (el) {
     var steps = D.examen.map(function (e, k) {
-      var last = k === D.examen.length - 1;
       return { html: '<div class="stage"><span class="meta">' + (k + 1) + '. ' + esc(e.t) + '</span><h3>' + esc(e.t) + '</h3><p>' + esc(e.ask) + '</p>' +
-        (last ? '<textarea id="ex" placeholder="Se quiser, anote o que deseja levar deste dia (opcional; salvo no diário)"></textarea>' : '') + '</div>' };
+        '</div>' };
     });
     stepper(el, steps, { endLabel: 'Concluir', onEnd: function () {
-      var t = $('#ex'); if (t && t.value.trim()) { var j = uload('journal', []); j.unshift({ d: new Date().toLocaleString('pt-BR'), t: 'Exame do dia\n' + t.value.trim() }); usave('journal', j); }
       el.innerHTML = doneCard('Você entregou o dia ao Senhor. Descanse em paz.') + '<div style="margin-top:14px">' + prayerCard(pid('noite'), true) + '</div>';
     } });
   };
@@ -795,7 +573,7 @@
     $('.bnav').innerHTML = NAV.filter(function (n) { return !n[3]; }).map(function (n) { return '<a href="#/' + n[0] + '" data-r="' + n[0] + '">' + ic(n[2]) + '<span>' + n[1] + '</span></a>'; }).join('');
   }
   function route() {
-    clearTimers(); curPractice = null; var tp = $('#ctip'); if (tp) tp.classList.remove('on');
+    clearTimers();
     var parts = location.hash.replace(/^#\/?/, '').split('/'), r = parts[0] || '';
     (routes[r] || routes[''])(parts);
     Commons.hydrate(app);
@@ -811,7 +589,6 @@
     var tr = A.track();
     $('#ptitle').textContent = tr.name;
     $('#pstate').textContent = on ? 'Tocando · ' + tr.desc : 'Pausado · toque para ouvir';
-    var tl = $('#ptext'); if (tl) { tl.hidden = !tr.text; if (tr.text) tl.href = '#/oracao/' + tr.text; }
     renderTracks();
   }
   function renderTracks() {
@@ -819,9 +596,8 @@
     var last = '';
     $('#tracks').innerHTML = A.tracks().map(function (t) {
       var h = t.group !== last ? '<p class="tk-h">' + esc(t.group) + '</p>' : ''; last = t.group;
-      return h + '<div class="tk-row"><button role="menuitemradio" aria-checked="' + (t.id === cur) + '" data-track="' + t.id + '"><strong>' + esc(t.name) + '</strong><small>' + esc(t.desc) + '</small></button>' +
-        (t.text ? '<a class="tk-text" href="#/oracao/' + t.text + '" title="Ler o texto">texto</a>' : '') + '</div>';
-    }).join('') + '<p class="tk-note">Faixas geradas no seu navegador: melodias de domínio público e improvisos em estilos tradicionais. A salmodia é instrumental, no estilo gregoriano; use “texto” para rezar acompanhando.</p>';
+      return h + '<button role="menuitemradio" aria-checked="' + (t.id === cur) + '" data-track="' + t.id + '"><strong>' + esc(t.name) + '</strong><small>' + esc(t.desc) + '</small></button>';
+    }).join('') + '<p class="tk-note">Faixas geradas no seu navegador: melodias de domínio público e improvisos em estilos tradicionais.</p>';
     $$('[data-track]').forEach(function (b) { b.onclick = function () { save('track', b.dataset.track); save('music', 'on'); A.setTrack(b.dataset.track); if (!A.isOn()) A.start(); toggleMenu(false); }; });
   }
   function toggleMenu(force) {
@@ -878,8 +654,8 @@
   }
 
   function init() {
-    PG.restore();
-    buildNav(); syncMe();
+    buildNav();
+    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(function () {});
     $$('[data-lang]').forEach(function (b) { b.onclick = function () { setLang(b.dataset.lang); }; });
     $('#langc').onclick = function () { setLang({ pt: 'la', la: 'both', both: 'pt' }[lang]); };
     syncLang();
